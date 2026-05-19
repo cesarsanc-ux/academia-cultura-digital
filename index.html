@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cultura Digital – CECyTES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --guinda: #611232;
+      --guinda-dark: #3e0b20;
+      --guinda-light: #8b1a45;
+      --dorado: #A57F2C;
+      --dorado-light: #c9a44a;
+      --dorado-pale: #f5ead0;
+      --blanco: #ffffff;
+      --gris-claro: #f7f4f0;
+      --gris-medio: #e8e2d9;
+      --texto: #1a1a1a;
+      --texto-suave: #5a5a5a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--texto);
+      background: var(--blanco);
+      overflow-x: hidden;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--guinda-dark);
+      color: #ccc;
+      font-size: 0.72rem;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.04em;
+      padding: 6px 2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 2rem;
+    }
+    .topbar a { color: var(--dorado-light); text-decoration: none; }
+    .topbar a:hover { text-decoration: underline; }
+
+    /* ── NAVBAR ── */
+    nav {
+      background: var(--guinda);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 64px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--dorado);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--guinda-dark);
+    }
+    .logo-text {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .logo-text span { color: var(--dorado-light); font-weight: 300; font-size: 0.78rem; display: block; }
+    .nav-links {
+      display: flex;
+      gap: 0;
+      list-style: none;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 0 1rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      transition: background 0.2s, color 0.2s;
+      text-transform: uppercase;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: rgba(165,127,44,0.2);
+      color: var(--dorado-light);
+    }
+
+    /* ── HERO ── */
+    #home {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      background: var(--guinda-dark);
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 40%, rgba(165,127,44,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 80% at 10% 80%, rgba(97,18,50,0.5) 0%, transparent 70%),
+        linear-gradient(135deg, #1a0510 0%, #3e0b20 45%, #611232 100%);
+    }
+    .hero-pattern {
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(45deg, rgba(165,127,44,0.04) 0px, rgba(165,127,44,0.04) 1px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(-45deg, rgba(165,127,44,0.04) 0px, rgba(165,127,44,0.04) 1px, transparent 1px, transparent 40px);
+    }
+    .hero-content {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      width: 100%;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(165,127,44,0.15);
+      border: 1px solid rgba(165,127,44,0.4);
+      color: var(--dorado-light);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-badge::before { content: '●'; font-size: 0.5rem; color: var(--dorado); }
+    .hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .hero-title .accent { color: var(--dorado-light); }
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn-primary {
+      background: var(--dorado);
+      color: var(--guinda-dark);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: var(--dorado-light); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--dorado-light); background: rgba(165,127,44,0.1); }
+
+    /* Hero right: Quick access cards */
+    .hero-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      animation: fadeUp 0.6s 0.25s ease both;
+    }
+    .quick-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 1.4rem 1.2rem;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .quick-card:hover {
+      background: rgba(165,127,44,0.15);
+      border-color: rgba(165,127,44,0.5);
+      transform: translateY(-3px);
+    }
+    .quick-card .qc-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(165,127,44,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .quick-card .qc-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.04em;
+    }
+    .quick-card .qc-desc {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.45);
+    }
+    .quick-card.full-width { grid-column: 1 / -1; flex-direction: row; text-align: left; gap: 1rem; }
+
+    /* Hero bottom strip */
+    .hero-stats {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(165,127,44,0.2);
+    }
+    .hero-stats-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 3rem;
+    }
+    .stat-item { display: flex; align-items: center; gap: 12px; }
+    .stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--dorado-light);
+    }
+    .stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.5); line-height: 1.4; }
+
+    /* ── NOTICIAS ── */
+    .news-section {
+      background: var(--gris-claro);
+      padding: 4rem 2rem;
+    }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .section-eyebrow {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--dorado);
+      margin-bottom: 0.4rem;
+    }
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 800;
+      color: var(--guinda);
+      line-height: 1.2;
+    }
+    .see-all {
+      color: var(--guinda);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 2px solid var(--dorado);
+      padding-bottom: 2px;
+    }
+
+    /* Carousel */
+    .carousel-wrap { position: relative; overflow: hidden; }
+    .carousel-track {
+      display: flex;
+      gap: 1.5rem;
+      transition: transform 0.4s cubic-bezier(.25,.8,.25,1);
+    }
+    .news-card {
+      min-width: 300px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      flex-shrink: 0;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .news-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(97,18,50,0.12); }
+    .news-card-img {
+      height: 140px;
+      background: linear-gradient(135deg, var(--guinda) 0%, var(--guinda-light) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .news-card-body { padding: 1.2rem; }
+    .news-tag {
+      display: inline-block;
+      background: var(--dorado-pale);
+      color: var(--dorado);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 0.6rem;
+    }
+    .news-card-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--guinda);
+      line-height: 1.4;
+      margin-bottom: 0.4rem;
+    }
+    .news-card-date { font-size: 0.72rem; color: var(--texto-suave); }
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--guinda);
+      color: #fff;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: background 0.2s;
+    }
+    .carousel-btn:hover { background: var(--guinda-light); }
+    .carousel-btn.prev { left: -18px; }
+    .carousel-btn.next { right: -18px; }
+
+    /* ── BIENVENIDA ── */
+    #bienvenida {
+      padding: 5rem 2rem;
+      background: #fff;
+    }
+    .bienvenida-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+    .welcome-visual {
+      position: relative;
+    }
+    .welcome-photo {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: linear-gradient(135deg, var(--guinda-dark) 0%, var(--guinda-light) 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .welcome-photo::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(97,18,50,0.7), transparent);
+    }
+    .welcome-quote {
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      background: var(--dorado);
+      color: var(--guinda-dark);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      padding: 14px 18px;
+      border-radius: 10px;
+      max-width: 200px;
+      line-height: 1.4;
+      box-shadow: 0 8px 24px rgba(165,127,44,0.3);
+    }
+    .welcome-text .section-title { margin-bottom: 1.2rem; }
+    .welcome-text p {
+      color: var(--texto-suave);
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+    .mv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .mv-card {
+      border-left: 3px solid var(--dorado);
+      padding: 1rem 1.2rem;
+      background: var(--gris-claro);
+      border-radius: 0 8px 8px 0;
+    }
+    .mv-card h4 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--guinda);
+      margin-bottom: 0.5rem;
+    }
+    .mv-card p { font-size: 0.82rem; color: var(--texto-suave); line-height: 1.6; }
+
+    /* ── ORGANIGRAMA ── */
+    #organigrama {
+      padding: 5rem 2rem;
+      background: var(--gris-claro);
+    }
+    .org-chart {
+      margin-top: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .org-level { display: flex; justify-content: center; gap: 1.5rem; position: relative; }
+    .org-connector {
+      width: 2px;
+      height: 30px;
+      background: var(--dorado);
+      margin: 0 auto;
+    }
+    .org-row-connector {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      justify-content: center;
+    }
+    .org-hline {
+      height: 2px;
+      background: var(--dorado);
+      position: absolute;
+      opacity: 0.5;
+    }
+    .org-node {
+      background: #fff;
+      border: 2px solid var(--gris-medio);
+      border-radius: 12px;
+      padding: 1rem 1.4rem;
+      text-align: center;
+      min-width: 160px;
+      max-width: 190px;
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      cursor: default;
+    }
+    .org-node:hover {
+      border-color: var(--dorado);
+      box-shadow: 0 4px 20px rgba(165,127,44,0.15);
+      transform: translateY(-2px);
+    }
+    .org-node.top {
+      background: var(--guinda);
+      border-color: var(--guinda);
+      color: #fff;
+    }
+    .org-node.coord {
+      background: var(--guinda-light);
+      border-color: var(--guinda-light);
+      color: #fff;
+    }
+    .org-node .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(165,127,44,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin: 0 auto 0.6rem;
+    }
+    .org-node.top .avatar { background: rgba(255,255,255,0.15); }
+    .org-node .org-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .org-node .org-role {
+      font-size: 0.68rem;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+    .org-node .org-email {
+      font-size: 0.65rem;
+      color: var(--dorado-light);
+      margin-top: 6px;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .org-node.top .org-email { color: var(--dorado-light); }
+
+    /* ── SECCIONES RECURSOS ── */
+    .recursos-section {
+      padding: 5rem 2rem;
+      background: #fff;
+    }
+    .recursos-section.alt { background: var(--gris-claro); }
+    .recursos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .recurso-card {
+      background: #fff;
+      border: 1px solid var(--gris-medio);
+      border-radius: 14px;
+      padding: 1.6rem;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+    }
+    .recursos-section.alt .recurso-card { background: #fff; }
+    .recurso-card:hover {
+      border-color: var(--guinda);
+      box-shadow: 0 6px 24px rgba(97,18,50,0.1);
+      transform: translateY(-3px);
+    }
+    .recurso-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: var(--dorado-pale);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin: 0 auto 1rem;
+    }
+    .recurso-card:hover .recurso-icon { background: var(--guinda); }
+    .recurso-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--guinda);
+      margin-bottom: 0.4rem;
+    }
+    .recurso-desc { font-size: 0.78rem; color: var(--texto-suave); line-height: 1.5; }
+
+    /* ── ACADEMIA ── */
+    #academia {
+      padding: 5rem 2rem;
+      background: var(--guinda);
+    }
+    #academia .section-eyebrow { color: var(--dorado-light); }
+    #academia .section-title { color: #fff; }
+    .academia-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .academia-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 1.6rem;
+      transition: background 0.2s, border-color 0.2s;
+      text-decoration: none;
+      display: block;
+    }
+    .academia-card:hover {
+      background: rgba(165,127,44,0.15);
+      border-color: rgba(165,127,44,0.5);
+    }
+    .academia-card-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(165,127,44,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+    .academia-card h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .academia-card p { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+    .academia-card .ac-link {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--dorado-light);
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── REPOSITORIO ── */
+    #repositorio {
+      padding: 5rem 2rem;
+      background: #fff;
+    }
+    .repo-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .repo-tab {
+      background: var(--gris-claro);
+      border: 1px solid var(--gris-medio);
+      color: var(--texto-suave);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .repo-tab.active, .repo-tab:hover {
+      background: var(--guinda);
+      color: #fff;
+      border-color: var(--guinda);
+    }
+    .repo-items {
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .repo-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--gris-claro);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      border: 1px solid var(--gris-medio);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .repo-item:hover { border-color: var(--dorado); box-shadow: 0 4px 12px rgba(165,127,44,0.1); }
+    .repo-file-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--dorado-pale);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .repo-item-info { flex: 1; }
+    .repo-item-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--guinda);
+      margin-bottom: 2px;
+    }
+    .repo-item-meta { font-size: 0.7rem; color: var(--texto-suave); }
+    .repo-item-badge {
+      font-size: 0.62rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .badge-pdf { background: #fde8e8; color: #c0392b; }
+    .badge-word { background: #e8eeff; color: #2563eb; }
+    .badge-slides { background: #fef3e8; color: #d97706; }
+    .badge-video { background: #e8f5e9; color: #15803d; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--guinda-dark);
+      color: rgba(255,255,255,0.6);
+      padding: 3rem 2rem 1.5rem;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 2rem;
+    }
+    .footer-brand .logo-text { color: #fff; margin-bottom: 1rem; font-size: 1.1rem; }
+    .footer-brand p { font-size: 0.8rem; line-height: 1.7; }
+    .footer-col h4 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dorado-light);
+      margin-bottom: 1rem;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 0.5rem; }
+    .footer-col ul a {
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      font-size: 0.82rem;
+      transition: color 0.2s;
+    }
+    .footer-col ul a:hover { color: var(--dorado-light); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+    .footer-bottom .dorado { color: var(--dorado-light); }
+
+    /* ── DIVIDER ── */
+    .section-divider {
+      height: 4px;
+      background: linear-gradient(90deg, var(--guinda) 0%, var(--dorado) 50%, var(--guinda) 100%);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero-content { grid-template-columns: 1fr; gap: 2rem; }
+      .bienvenida-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .hero-cards { grid-template-columns: 1fr 1fr; }
+      .hero-stats-inner { gap: 1.5rem; flex-wrap: wrap; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 600px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .org-level { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="https://www.sems.gob.mx" target="_blank">SEMS</a>
+  <a href="#">SICE</a>
+  <a href="#">Correo Institucional</a>
+  <a href="#">Directorio</a>
+</div>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-inner">
+    <a href="#home" class="nav-logo">
+      <div class="logo-icon">CD</div>
+      <div class="logo-text">
+        Cultura Digital
+        <span>CECyTE · Tlaxcala</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#home" class="active">Inicio</a></li>
+      <li><a href="#bienvenida">Bienvenida</a></li>
+      <li><a href="#organigrama">Organigrama</a></li>
+      <li><a href="#material">Material de Apoyo</a></li>
+      <li><a href="#academia">Academia</a></li>
+      <li><a href="#repositorio">Repositorio</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ════ HERO ════ -->
+<section id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-content">
+    <!-- LEFT -->
+    <div>
+      <div class="hero-badge">CECyTES · Área Académica</div>
+      <h1 class="hero-title">
+        Transformando la educación a través de la
+        <span class="accent">ciudadanía y cultura digital</span>
+      </h1>
+      <p class="hero-subtitle">
+        Plataforma oficial del área de Cultura Digital del CECyTE Tlaxcala. Recursos, formatos, acuerdos de academia y materiales de apoyo para docentes de todo el estado.
+      </p>
+      <div class="hero-buttons">
+        <a href="#bienvenida" class="btn-primary">▶ Conocer más</a>
+        <a href="#repositorio" class="btn-outline">📂 Repositorio</a>
+      </div>
+    </div>
+    <!-- RIGHT: Quick access -->
+    <div class="hero-cards">
+      <a href="#academia" class="quick-card">
+        <div class="qc-icon">🏛️</div>
+        <div class="qc-label">Academia Nacional</div>
+        <div class="qc-desc">Actas y acuerdos</div>
+      </a>
+      <a href="#repositorio" class="quick-card">
+        <div class="qc-icon">📚</div>
+        <div class="qc-label">Repositorio</div>
+        <div class="qc-desc">Recursos docentes</div>
+      </a>
+      <a href="#material" class="quick-card">
+        <div class="qc-icon">🛠️</div>
+        <div class="qc-label">Material de Apoyo</div>
+        <div class="qc-desc">Guías y tutoriales</div>
+      </a>
+      <a href="#organigrama" class="quick-card">
+        <div class="qc-icon">🗂️</div>
+        <div class="qc-label">Organigrama</div>
+        <div class="qc-desc">Directorio y contactos</div>
+      </a>
+    </div>
+  </div>
+  <!-- STATS BAR -->
+  <div class="hero-stats">
+    <div class="hero-stats-inner">
+      <div class="stat-item">
+        <div class="stat-num">60+</div>
+        <div class="stat-label">Planteles<br>CECyTES</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Parciales<br>académicos</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">MCCEMS</div>
+        <div class="stat-label">Nuevo Marco<br>Curricular</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">2024–25</div>
+        <div class="stat-label">Ciclo<br>escolar</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ NOTICIAS / AVISOS ════ -->
+<section class="news-section">
+  <div class="section-inner">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Avisos recientes</div>
+        <h2 class="section-title">Noticias del Área</h2>
+      </div>
+      <a href="#" class="see-all">Ver todos →</a>
+    </div>
+    <div class="carousel-wrap">
+      <button class="carousel-btn prev" onclick="moveCarousel(-1)">‹</button>
+      <div class="carousel-track" id="carouselTrack">
+        <div class="news-card">
+          <div class="news-card-img">📋</div>
+          <div class="news-card-body">
+            <span class="news-tag">Academia</span>
+            <div class="news-card-title">Acta de Acuerdos — Reunión Nacional Mayo 2025</div>
+            <div class="news-card-date">📅 12 mayo 2025</div>
+          </div>
+        </div>
+        <div class="news-card">
+          <div class="news-card-img">📅</div>
+          <div class="news-card-body">
+            <span class="news-tag">Calendario</span>
+            <div class="news-card-title">Próxima sesión de academia estatal — 28 junio</div>
+            <div class="news-card-date">📅 02 mayo 2025</div>
+          </div>
+        </div>
+        <div class="news-card">
+          <div class="news-card-img">📥</div>
+          <div class="news-card-body">
+            <span class="news-tag">Formatos</span>
+            <div class="news-card-title">Nuevas planeaciones 2do parcial disponibles para descarga</div>
+            <div class="news-card-date">📅 28 abril 2025</div>
+          </div>
+        </div>
+        <div class="news-card">
+          <div class="news-card-img">🎓</div>
+          <div class="news-card-body">
+            <span class="news-tag">Capacitación</span>
+            <div class="news-card-title">Taller: Ciudadanía Digital en el aula — Registro abierto</div>
+            <div class="news-card-date">📅 20 abril 2025</div>
+          </div>
+        </div>
+        <div class="news-card">
+          <div class="news-card-img">🔗</div>
+          <div class="news-card-body">
+            <span class="news-tag">Plataformas</span>
+            <div class="news-card-title">Actualización de credenciales SICE — Instrucciones</div>
+            <div class="news-card-date">📅 15 abril 2025</div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-btn next" onclick="moveCarousel(1)">›</button>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ════ BIENVENIDA ════ -->
+<section id="bienvenida">
+  <div class="section-inner">
+    <div class="bienvenida-grid reveal">
+      <div class="welcome-visual">
+        <div class="welcome-photo">🎓</div>
+        <div class="welcome-quote">
+          "La cultura digital es el eje transversal del ciudadano del siglo XXI"
+        </div>
+      </div>
+      <div class="welcome-text">
+        <div class="section-eyebrow">Bienvenida</div>
+        <h2 class="section-title">Área de Cultura Digital CECyTES</h2>
+        <p>
+          El área de Cultura Digital del CECyTE Tlaxcala da la bienvenida a todos los docentes y actores educativos. Este espacio es tu punto de acceso a recursos, formatos y normativa del <strong>Nuevo Marco Curricular Común (MCCEMS)</strong>.
+        </p>
+        <p>
+          Aquí encontrarás todo el material necesario para implementar con éxito los aprendizajes de Cultura Digital en tus grupos, desde planeaciones hasta proyectos de aula transversales.
+        </p>
+        <div class="mv-grid">
+          <div class="mv-card">
+            <h4>Misión</h4>
+            <p>Fortalecer las competencias digitales en estudiantes y docentes de CECyTES para una participación crítica y responsable en la sociedad digital.</p>
+          </div>
+          <div class="mv-card">
+            <h4>Visión</h4>
+            <p>Ser referente estatal en la formación de ciudadanos digitales comprometidos con el uso ético y creativo de la tecnología.</p>
+          </div>
+          <div class="mv-card" style="grid-column:1/-1">
+            <h4>Objetivo General</h4>
+            <p>Centralizar y difundir los recursos académicos, formativos y normativos del área de Cultura Digital para apoyar la práctica docente en todos los planteles del estado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ════ ORGANIGRAMA ════ -->
+<section id="organigrama">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-eyebrow">Estructura jerárquica</div>
+        <h2 class="section-title">Organigrama del Área</h2>
+      </div>
+    </div>
+    <div class="org-chart reveal">
+      <!-- Nivel 1 -->
+      <div class="org-level">
+        <div class="org-node top">
+          <div class="avatar">🏛️</div>
+          <div class="org-name">Dirección General</div>
+          <div class="org-role">CECyTE Tlaxcala</div>
+          <div class="org-email">direccion@cecytes.edu.mx</div>
+        </div>
+      </div>
+      <div class="org-connector"></div>
+      <!-- Nivel 2 -->
+      <div class="org-level">
+        <div class="org-node coord">
+          <div class="avatar">📋</div>
+          <div class="org-name">Coordinación Académica</div>
+          <div class="org-role">Área Curricular</div>
+          <div class="org-email">coord.academica@cecytes.edu.mx</div>
+        </div>
+      </div>
+      <div class="org-connector"></div>
+      <!-- Nivel 3 -->
+      <div class="org-level" style="gap:2rem">
+        <div class="org-node">
+          <div class="avatar">💻</div>
+          <div class="org-name">Responsable de Cultura Digital</div>
+          <div class="org-role">Zona Norte</div>
+          <div class="org-email">cd.norte@cecytes.edu.mx</div>
+        </div>
+        <div class="org-node">
+          <div class="avatar">💻</div>
+          <div class="org-name">Responsable de Cultura Digital</div>
+          <div class="org-role">Zona Centro</div>
+          <div class="org-email">cd.centro@cecytes.edu.mx</div>
+        </div>
+        <div class="org-node">
+          <div class="avatar">💻</div>
+          <div class="org-name">Responsable de Cultura Digital</div>
+          <div class="org-role">Zona Sur</div>
+          <div class="org-email">cd.sur@cecytes.edu.mx</div>
+        </div>
+      </div>
+      <div class="org-connector"></div>
+      <!-- Nivel 4 -->
+      <div class="org-level" style="gap:1rem; flex-wrap:wrap; max-width:700px">
+        <div class="org-node" style="min-width:130px">
+          <div class="avatar" style="font-size:1rem">👩‍🏫</div>
+          <div class="org-name">Docentes</div>
+          <div class="org-role">Plantel 01</div>
+        </div>
+        <div class="org-node" style="min-width:130px">
+          <div class="avatar" style="font-size:1rem">👨‍🏫</div>
+          <div class="org-name">Docentes</div>
+          <div class="org-role">Plantel 02</div>
+        </div>
+        <div class="org-node" style="min-width:130px">
+          <div class="avatar" style="font-size:1rem">👩‍🏫</div>
+          <div class="org-name">Docentes</div>
+          <div class="org-role">Plantel 03</div>
+        </div>
+        <div class="org-node" style="min-width:130px; border-style:dashed">
+          <div class="org-name" style="font-size:0.72rem; color:var(--texto-suave)">+ 57 planteles más</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ════ MATERIAL DE APOYO ════ -->
+<section id="material" class="recursos-section reveal">
+  <div class="section-inner">
+    <div class="section-eyebrow">Recursos transversales</div>
+    <h2 class="section-title" style="color:var(--guinda)">Material de Apoyo General</h2>
+    <div class="recursos-grid">
+      <a href="#" class="recurso-card">
+        <div class="recurso-icon">📖</div>
+        <div class="recurso-title">Manuales de Usuario</div>
+        <div class="recurso-desc">Guías de uso para plataformas y herramientas institucionales.</div>
+      </a>
+      <a href="#" class="recurso-card">
+        <div class="recurso-icon">🖥️</div>
+        <div class="recurso-title">Software Educativo</div>
+        <div class="recurso-desc">Guías de instalación y uso de herramientas digitales para el aula.</div>
+      </a>
+      <a href="#" class="recurso-card">
+        <div class="recurso-icon">🔗</div>
+        <div class="recurso-title">Plataformas Oficiales</div>
+        <div class="recurso-desc">Accesos directos a SICE, correos institucionales y sistemas SEP.</div>
+      </a>
+      <a href="#" class="recurso-card">
+        <div class="recurso-icon">▶️</div>
+        <div class="recurso-title">Tutoriales en Video</div>
+        <div class="recurso-desc">Videos incrustados desde YouTube y Google Drive para capacitación.</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ════ ACADEMIA NACIONAL ════ -->
+<section id="academia">
+  <div class="section-inner">
+    <div class="section-eyebrow">Espacio normativo y de acuerdos</div>
+    <h2 class="section-title">Academia Nacional</h2>
+    <div class="academia-grid reveal">
+      <a href="#" class="academia-card">
+        <div class="academia-card-icon">📄</div>
+        <h3>Formatos Descargables</h3>
+        <p>Planeaciones, secuencias didácticas y listas de cotejo en formato Word y PDF listos para usar.</p>
+        <div class="ac-link">Descargar formatos →</div>
+      </a>
+      <a href="#" class="academia-card">
+        <div class="academia-card-icon">📝</div>
+        <h3>Actas de Acuerdos</h3>
+        <p>Historial completo de reuniones nacionales y estatales, organizadas por fecha y nivel.</p>
+        <div class="ac-link">Ver actas →</div>
+      </a>
+      <a href="#" class="academia-card">
+        <div class="academia-card-icon">📆</div>
+        <h3>Calendario de Sesiones</h3>
+        <p>Calendario de Google integrado con todas las próximas reuniones de academia del ciclo.</p>
+        <div class="ac-link">Ver calendario →</div>
+      </a>
+      <a href="#" class="academia-card">
+        <div class="academia-card-icon">🤝</div>
+        <h3>Acuerdos Vigentes</h3>
+        <p>Resumen ejecutivo de los acuerdos en vigor para implementación en plantel.</p>
+        <div class="ac-link">Consultar →</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ════ REPOSITORIO ════ -->
+<section id="repositorio">
+  <div class="section-inner reveal">
+    <div class="section-eyebrow">Biblioteca docente</div>
+    <h2 class="section-title" style="color:var(--guinda)">Repositorio de Material de Apoyo</h2>
+    <div class="repo-tabs">
+      <button class="repo-tab active" onclick="filterRepo(this,'all')">Todos</button>
+      <button class="repo-tab" onclick="filterRepo(this,'proyecto')">Proyectos Aula</button>
+      <button class="repo-tab" onclick="filterRepo(this,'evaluacion')">Evaluación</button>
+      <button class="repo-tab" onclick="filterRepo(this,'multimedia')">Multimedia</button>
+      <button class="repo-tab" onclick="filterRepo(this,'laboratorio')">Laboratorio</button>
+    </div>
+    <div class="repo-items" id="repoItems">
+      <div class="repo-item" data-cat="proyecto">
+        <div class="repo-file-icon">📁</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Proyecto Transversal — Identidad Digital</div>
+          <div class="repo-item-meta">Parcial 1 · Actualizado: abr 2025</div>
+        </div>
+        <span class="repo-item-badge badge-word">DOCX</span>
+      </div>
+      <div class="repo-item" data-cat="evaluacion">
+        <div class="repo-file-icon">📊</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Banco de Reactivos — Unidad 1</div>
+          <div class="repo-item-meta">Evaluación · Actualizado: mar 2025</div>
+        </div>
+        <span class="repo-item-badge badge-pdf">PDF</span>
+      </div>
+      <div class="repo-item" data-cat="multimedia">
+        <div class="repo-file-icon">🎞️</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Presentación — Ciudadanía Digital</div>
+          <div class="repo-item-meta">Parcial 2 · Actualizado: may 2025</div>
+        </div>
+        <span class="repo-item-badge badge-slides">PPTX</span>
+      </div>
+      <div class="repo-item" data-cat="laboratorio">
+        <div class="repo-file-icon">🔬</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Guía de Práctica — Seguridad en Redes</div>
+          <div class="repo-item-meta">Cómputo · Actualizado: abr 2025</div>
+        </div>
+        <span class="repo-item-badge badge-pdf">PDF</span>
+      </div>
+      <div class="repo-item" data-cat="multimedia">
+        <div class="repo-file-icon">🎬</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Video: Introducción a la Privacidad Digital</div>
+          <div class="repo-item-meta">Multimedia · YouTube embed</div>
+        </div>
+        <span class="repo-item-badge badge-video">VIDEO</span>
+      </div>
+      <div class="repo-item" data-cat="evaluacion">
+        <div class="repo-file-icon">📋</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Rúbrica de Evaluación — Proyecto Final</div>
+          <div class="repo-item-meta">Evaluación · Actualizado: may 2025</div>
+        </div>
+        <span class="repo-item-badge badge-word">DOCX</span>
+      </div>
+      <div class="repo-item" data-cat="proyecto">
+        <div class="repo-file-icon">💡</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Infografía — Derechos Digitales</div>
+          <div class="repo-item-meta">Parcial 3 · PDF imprimible</div>
+        </div>
+        <span class="repo-item-badge badge-pdf">PDF</span>
+      </div>
+      <div class="repo-item" data-cat="laboratorio">
+        <div class="repo-file-icon">⚙️</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">Manual — Configuración de Google Workspace</div>
+          <div class="repo-item-meta">Laboratorio · Actualizado: ene 2025</div>
+        </div>
+        <span class="repo-item-badge badge-pdf">PDF</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<div class="section-divider"></div>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo-text">Cultura Digital · CECyTES</div>
+        <p>Área académica del Colegio de Estudios Científicos y Tecnológicos del Estado de Tlaxcala. Comprometidos con la formación de ciudadanos digitales críticos, éticos y creativos.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Secciones</h4>
+        <ul>
+          <li><a href="#home">Inicio</a></li>
+          <li><a href="#bienvenida">Bienvenida</a></li>
+          <li><a href="#organigrama">Organigrama</a></li>
+          <li><a href="#material">Material de Apoyo</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Academia</h4>
+        <ul>
+          <li><a href="#academia">Formatos</a></li>
+          <li><a href="#academia">Actas de Acuerdos</a></li>
+          <li><a href="#academia">Calendario</a></li>
+          <li><a href="#repositorio">Repositorio</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="#">culturadigital@cecytes.edu.mx</a></li>
+          <li><a href="#">SICE Institucional</a></li>
+          <li><a href="#">Correo CECyTES</a></li>
+          <li><a href="#">Directorio</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 CECyTE Tlaxcala · Área de Cultura Digital</span>
+     </div>
+  </div>
+</footer>
+
+<script>
+  // ── CAROUSEL ──
+  let carouselPos = 0;
+  function moveCarousel(dir) {
+    const track = document.getElementById('carouselTrack');
+    const cards = track.querySelectorAll('.news-card');
+    const cardWidth = cards[0].offsetWidth + 24;
+    const max = cards.length - 3;
+    carouselPos = Math.max(0, Math.min(carouselPos + dir, max));
+    track.style.transform = `translateX(-${carouselPos * cardWidth}px)`;
+  }
+
+  // ── REPO FILTER ──
+  function filterRepo(btn, cat) {
+    document.querySelectorAll('.repo-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.repo-item').forEach(item => {
+      const show = cat === 'all' || item.dataset.cat === cat;
+      item.style.display = show ? 'flex' : 'none';
+    });
+  }
+
+  // ── SCROLL REVEAL ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── NAV ACTIVE STATE ──
+  const sections = document.querySelectorAll('section[id]');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY + 80;
+    sections.forEach(sec => {
+      const link = document.querySelector(`.nav-links a[href="#${sec.id}"]`);
+      if (!link) return;
+      const active = y >= sec.offsetTop && y < sec.offsetTop + sec.offsetHeight;
+      link.classList.toggle('active', active);
+    });
+  });
+</script>
+</body>
+</html>
