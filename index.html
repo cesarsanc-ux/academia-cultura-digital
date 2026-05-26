@@ -855,6 +855,7 @@
   <a href="#">SICE</a>
   <a href="#">Correo Institucional</a>
   <a href="#">Directorio</a>
+  <a href="login.html" target="_blank">🔧 Administrador</a>
 </div>
 
 <!-- NAVBAR -->
@@ -958,46 +959,7 @@
     <div class="carousel-wrap">
       <button class="carousel-btn prev" onclick="moveCarousel(-1)">‹</button>
       <div class="carousel-track" id="carouselTrack">
-        <div class="news-card">
-          <div class="news-card-img">📋</div>
-          <div class="news-card-body">
-            <span class="news-tag">Academia</span>
-            <div class="news-card-title">Acta de Acuerdos — Reunión Nacional Mayo 2025</div>
-            <div class="news-card-date">📅 12 mayo 2025</div>
-          </div>
-        </div>
-        <div class="news-card">
-          <div class="news-card-img">📅</div>
-          <div class="news-card-body">
-            <span class="news-tag">Calendario</span>
-            <div class="news-card-title">Próxima sesión de academia estatal — 28 junio</div>
-            <div class="news-card-date">📅 02 mayo 2025</div>
-          </div>
-        </div>
-        <div class="news-card">
-          <div class="news-card-img">📥</div>
-          <div class="news-card-body">
-            <span class="news-tag">Formatos</span>
-            <div class="news-card-title">Nuevas planeaciones 2do parcial disponibles para descarga</div>
-            <div class="news-card-date">📅 28 abril 2025</div>
-          </div>
-        </div>
-        <div class="news-card">
-          <div class="news-card-img">🎓</div>
-          <div class="news-card-body">
-            <span class="news-tag">Capacitación</span>
-            <div class="news-card-title">Taller: Ciudadanía Digital en el aula — Registro abierto</div>
-            <div class="news-card-date">📅 20 abril 2025</div>
-          </div>
-        </div>
-        <div class="news-card">
-          <div class="news-card-img">🔗</div>
-          <div class="news-card-body">
-            <span class="news-tag">Plataformas</span>
-            <div class="news-card-title">Actualización de credenciales SICE — Instrucciones</div>
-            <div class="news-card-date">📅 15 abril 2025</div>
-          </div>
-        </div>
+        <!-- Las noticias se cargarán dinámicamente aquí -->
       </div>
       <button class="carousel-btn next" onclick="moveCarousel(1)">›</button>
     </div>
@@ -1318,13 +1280,75 @@
 </footer>
 
 <script>
+  // ── LOAD NEWS FROM LOCALSTORAGE ──
+  function loadNews() {
+    const stored = localStorage.getItem('cecytes_news');
+    const news = stored ? JSON.parse(stored) : getDefaultNews();
+    renderNewsCarousel(news);
+  }
+
+  function getDefaultNews() {
+    return [
+      {
+        title: "Acta de Acuerdos — Reunión Nacional Mayo 2025",
+        desc: "Resumen de los acuerdos más importantes de la reunión nacional de cultura digital.",
+        tag: "Academia",
+        icon: "📋",
+        date: "2025-05-12"
+      },
+      {
+        title: "Próxima sesión de academia estatal — 28 junio",
+        desc: "Información sobre la próxima reunión de la academia estatal.",
+        tag: "Calendario",
+        icon: "📅",
+        date: "2025-05-02"
+      },
+      {
+        title: "Nuevas planeaciones 2do parcial disponibles para descarga",
+        desc: "Se han publicado los nuevos formatos de planeación para el segundo parcial.",
+        tag: "Formatos",
+        icon: "📥",
+        date: "2025-04-28"
+      },
+      {
+        title: "Taller: Ciudadanía Digital en el aula — Registro abierto",
+        desc: "Registro abierto para el taller de ciudadanía digital dirigido a docentes.",
+        tag: "Capacitación",
+        icon: "🎓",
+        date: "2025-04-20"
+      },
+      {
+        title: "Actualización de credenciales SICE — Instrucciones",
+        desc: "Instrucciones para actualizar credenciales en el sistema SICE.",
+        tag: "Plataformas",
+        icon: "🔗",
+        date: "2025-04-15"
+      }
+    ];
+  }
+
+  function renderNewsCarousel(news) {
+    const track = document.getElementById('carouselTrack');
+    track.innerHTML = news.map(item => `
+      <div class="news-card">
+        <div class="news-card-img">${item.icon}</div>
+        <div class="news-card-body">
+          <span class="news-tag">${item.tag}</span>
+          <div class="news-card-title">${item.title}</div>
+          <div class="news-card-date">📅 ${new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
   // ── CAROUSEL ──
   let carouselPos = 0;
   function moveCarousel(dir) {
     const track = document.getElementById('carouselTrack');
     const cards = track.querySelectorAll('.news-card');
+    if (cards.length === 0) return;
     const cardWidth = cards[0].offsetWidth + 24;
-    const max = cards.length - 3;
+    const max = Math.max(0, cards.length - 3);
     carouselPos = Math.max(0, Math.min(carouselPos + dir, max));
     track.style.transform = `translateX(-${carouselPos * cardWidth}px)`;
   }
@@ -1356,6 +1380,9 @@
       link.classList.toggle('active', active);
     });
   });
+
+  // ── INIT ──
+  document.addEventListener('DOMContentLoaded', loadNews);
 </script>
 </body>
 </html>
