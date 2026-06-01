@@ -22,13 +22,14 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
 
     body {
       font-family: 'Open Sans', sans-serif;
       color: var(--texto);
       background: var(--blanco);
       overflow-x: hidden;
+      width: 100%;
     }
 
     /* ── TOPBAR ── */
@@ -51,7 +52,7 @@
       background: var(--guinda);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 200;
       box-shadow: 0 2px 16px rgba(0,0,0,0.3);
     }
     .nav-inner {
@@ -62,7 +63,34 @@
       justify-content: space-between;
       padding: 0 2rem;
       height: 64px;
+      flex-wrap: nowrap;
     }
+
+    /* ── HAMBURGER ── */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+    .nav-toggle span {
+      display: block;
+      width: 100%;
+      height: 2px;
+      background: #fff;
+      border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s;
+    }
+    .nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
     .nav-logo {
       display: flex;
       align-items: center;
@@ -124,26 +152,26 @@
       background: var(--guinda-dark);
     }
     .hero-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      ellipse 70% 60% at 80% 40%,
-      rgba(255,255,255,0.08) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 50% 80% at 10% 80%,
-      var(--guinda-light) 0%,
-      transparent 70%
-    ),
-    linear-gradient(
-      135deg,
-      var(--guinda-dark) 0%,
-      var(--guinda) 50%,
-      var(--guinda-light) 100%
-    );
-}
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(
+          ellipse 70% 60% at 80% 40%,
+          rgba(255,255,255,0.08) 0%,
+          transparent 70%
+        ),
+        radial-gradient(
+          ellipse 50% 80% at 10% 80%,
+          var(--guinda-light) 0%,
+          transparent 70%
+        ),
+        linear-gradient(
+          135deg,
+          var(--guinda-dark) 0%,
+          var(--guinda) 50%,
+          var(--guinda-light) 100%
+        );
+    }
     .hero-pattern {
       position: absolute;
       inset: 0;
@@ -155,7 +183,7 @@
       position: relative;
       max-width: 1200px;
       margin: 0 auto;
-      padding: 4rem 2rem;
+      padding: 4rem 2rem 7rem;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 4rem;
@@ -308,6 +336,7 @@
       padding: 1rem 2rem;
       display: flex;
       gap: 3rem;
+      flex-wrap: wrap;
     }
     .stat-item { display: flex; align-items: center; gap: 12px; }
     .stat-num {
@@ -442,15 +471,20 @@
       z-index: 1000;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: 1rem;
+      overflow-y: auto;
     }
     .modal.show { display: flex; }
     .modal-content {
       width: min(560px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
       background: #fff;
       border-radius: 16px;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
       padding: 1.8rem;
+      margin: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .modal-header {
       font-family: 'Montserrat', sans-serif;
@@ -974,50 +1008,66 @@
     /* ── RESPONSIVE ── */
     @media (max-width: 1100px) {
       .hero-content { grid-template-columns: 1fr; gap: 2.5rem; }
-      .hero-cards { grid-template-columns: 1fr; }
+      .hero-cards { grid-template-columns: 1fr 1fr; }
       .bienvenida-grid { grid-template-columns: 1fr; }
       .mv-grid, .academia-grid, .repo-items { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
     }
     @media (max-width: 900px) {
       .topbar { padding: 6px 1rem; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
-      .nav-inner { flex-wrap: wrap; justify-content: space-between; padding: 0 1rem; gap: 1rem; }
+      .nav-toggle { display: flex; }
+      .nav-inner { padding: 0 1rem; height: 56px; }
       .nav-links {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: var(--guinda-dark);
+        z-index: 199;
+        padding: 0.5rem 0 1rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       }
+      .nav-links.open { display: flex; }
+      .nav-links li { width: 100%; }
       .nav-links a {
-        padding: 0.75rem 0.9rem;
+        width: 100%;
+        justify-content: center;
+        padding: 0.85rem 1rem;
         height: auto;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
       }
       .hero-stats-inner { gap: 1rem; flex-wrap: wrap; justify-content: center; }
-      .repo-item { flex-direction: column; align-items: flex-start; }
-      .repo-item-info { width: 100%; }
-      .hero-cards { gap: 1rem; }
+      .hero-cards { grid-template-columns: 1fr 1fr; gap: 1rem; }
       .footer-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 700px) {
+      body { overflow-x: hidden; }
       .topbar { font-size: 0.68rem; }
-      .nav-links { flex-direction: column; align-items: stretch; }
-      .nav-links a { width: 100%; justify-content: center; }
-      .hero-title { font-size: clamp(2rem, 8vw, 2.4rem); }
-      .hero-subtitle { font-size: 1rem; }
+      .hero-content { padding: 3rem 1rem 7rem; }
+      .hero-title { font-size: clamp(1.8rem, 7vw, 2.4rem); }
+      .hero-subtitle { font-size: 0.95rem; }
       .hero-buttons { flex-direction: column; align-items: stretch; }
       .hero-buttons a { width: 100%; justify-content: center; }
-      .hero-stats-inner { flex-direction: column; align-items: stretch; }
+      .hero-cards { grid-template-columns: 1fr 1fr; }
+      .hero-stats-inner { flex-direction: row; flex-wrap: wrap; align-items: flex-start; padding: 0.75rem 1rem; gap: 0.75rem; }
+      .stat-item { flex: 1; min-width: 80px; }
       .footer-grid { grid-template-columns: 1fr; }
-      .org-level { flex-direction: column; gap: 1rem; }
+      .org-level { flex-direction: column; align-items: center; gap: 1rem; }
       .org-row-connector { justify-content: center; }
+      .modal-content { padding: 1.25rem; border-radius: 12px; }
     }
-    @media (max-width: 600px) {
-      .topbar { padding: 6px 0.75rem; }
-      .nav-inner { padding: 0 0.75rem; }
-      .hero-content { padding: 3rem 1rem; }
+    @media (max-width: 480px) {
+      .topbar { padding: 6px 0.75rem; gap: 0.5rem; }
+      .hero-cards { grid-template-columns: 1fr; }
+      .quick-card { flex-direction: row; text-align: left; }
       .section-inner { padding: 0 0.75rem; }
-      .recursos-grid, .academia-grid, .repo-items { gap: 1rem; }
+      .recursos-grid, .academia-grid { gap: 1rem; }
+      .news-section { padding: 2.5rem 1rem; }
+      .carousel-wrap { padding: 0 1rem; }
+      .carousel-btn.prev { left: -8px; }
+      .carousel-btn.next { right: -8px; }
     }
   
 /* THEMES */
@@ -1073,19 +1123,22 @@
 <nav>
   <div class="nav-inner">
     <a href="#home" class="nav-logo">
-      <img src="logo.png"alt="Logo" width="100" height="100">
+      <img src="logo.png" alt="Logo" width="40" height="40" style="border-radius:6px;">
       <div class="logo-text">
         Cultura Digital
         <span>CECyTE · </span>
       </div>
     </a>
-    <ul class="nav-links">
-      <li><a href="#home" class="active">Inicio</a></li>
-      <li><a href="#bienvenida">Bienvenida</a></li>
-      <li><a href="#organigrama">Organigrama</a></li>
-      <li><a href="#material">Material de Apoyo</a></li>
-      <li><a href="#academia">Academia</a></li>
-      <li><a href="#repositorio">Repositorio</a></li>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home" class="active" onclick="closeNav()">Inicio</a></li>
+      <li><a href="#bienvenida" onclick="closeNav()">Bienvenida</a></li>
+      <li><a href="#organigrama" onclick="closeNav()">Organigrama</a></li>
+      <li><a href="#material" onclick="closeNav()">Material de Apoyo</a></li>
+      <li><a href="#academia" onclick="closeNav()">Academia</a></li>
+      <li><a href="#repositorio" onclick="closeNav()">Repositorio</a></li>
     </ul>
   </div>
 </nav>
@@ -1202,9 +1255,10 @@
   <div class="section-inner">
     <div class="bienvenida-grid reveal">
       <div class="welcome-visual">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/IX8SLH-rF58" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-        <div class="welcome-photo"></div>
+        <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; margin-bottom:1rem;">
+        <div class="welcome-photo"> <img src="cdigital.jpg" alt="Bienvenida"> </div>
+        </div>
+        
         <div class="welcome-quote">
           "La cultura digital es el eje transversal del ciudadano del siglo XXI"
         </div>
@@ -1511,6 +1565,23 @@
 </footer>
 
 <script>
+  // ── HAMBURGER NAV ──
+  function toggleNav() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.classList.toggle('open');
+    links.classList.toggle('open');
+  }
+  function closeNav() {
+    document.getElementById('navToggle').classList.remove('open');
+    document.getElementById('navLinks').classList.remove('open');
+  }
+  // Close nav when clicking outside
+  document.addEventListener('click', function(e) {
+    const nav = document.querySelector('nav');
+    if (!nav.contains(e.target)) closeNav();
+  });
+
   // ── LOAD NEWS FROM LOCALSTORAGE ──
   function loadNews() {
     const stored = localStorage.getItem('cecytes_news');
