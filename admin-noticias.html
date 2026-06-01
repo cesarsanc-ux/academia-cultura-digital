@@ -183,6 +183,12 @@
     }
     .btn-success:hover { background: #127a3a; }
 
+    .btn-info {
+      background: var(--info);
+      color: #fff;
+    }
+    .btn-info:hover { background: #1d4ed8; }
+
     .form-actions {
       display: flex;
       gap: 1rem;
@@ -259,6 +265,31 @@
     .news-item-actions {
       display: flex;
       gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .news-attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .attachment-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #fff;
+      border: 1px solid var(--gris-medio);
+      border-radius: 999px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.78rem;
+      color: var(--texto-suave);
+    }
+    .attachment-preview {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
     }
 
     .empty-state {
@@ -424,6 +455,17 @@
           <input type="date" id="newsDate" required />
         </div>
 
+        <div class="form-group">
+          <label for="newsDetail">Descripción completa</label>
+          <textarea id="newsDetail" placeholder="Detalle ampliado de la noticia. Se mostrará al hacer clic." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="newsAttachments">Imagenes o archivos</label>
+          <input type="file" id="newsAttachments" accept="image/*,.pdf,.doc,.docx,.xlsx,.ppt,.pptx,.txt" multiple />
+          <small style="color: var(--texto-suave); display: block; margin-top: 0.5rem;">Puedes subir imágenes o documentos para adjuntar a la noticia.</small>
+        </div>
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="submitBtn">➕ Agregar Noticia</button>
           <button type="reset" class="btn btn-secondary" id="resetBtn" onclick="resetForm()">Limpiar</button>
@@ -434,6 +476,10 @@
     <!-- LIST -->
     <section class="list-section">
       <h2>📰 Noticias Recientes</h2>
+      <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem;">
+        <input id="newsSearch" placeholder="Buscar noticias por título, categoría o texto..." style="flex:1;padding:0.6rem;border:1px solid var(--gris-medio);border-radius:8px;" />
+        <button class="btn btn-secondary btn-sm" id="clearSearch">Limpiar</button>
+      </div>
       <div class="news-list" id="newsList">
         <div class="empty-state">
           <div class="empty-state-icon">📋</div>
@@ -460,6 +506,16 @@
   </div>
 </div>
 
+<div class="modal" id="detailModal">
+  <div class="modal-content">
+    <div class="modal-header" id="detailModalTitle">Detalle de noticia</div>
+    <div class="modal-body" id="detailModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeDetailModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script src="auth.js"></script>
 <script>
   // Logout function
@@ -481,6 +537,14 @@
     updateUserDisplay();
     loadNews();
     setTodayDate();
+    const search = document.getElementById('newsSearch');
+    if (search) {
+      search.addEventListener('input', (e) => renderNews(e.target.value));
+    }
+    const clearBtn = document.getElementById('clearSearch');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', (e) => { e.preventDefault(); if (search) { search.value=''; renderNews(); } });
+    }
   });
 
   function setTodayDate() {
@@ -503,20 +567,54 @@
     updateStats();
   }
 
-  // RENDER LIST
-  function renderNews() {
+  function renderAttachmentBadges(attachments = []) {
+    if (!attachments || attachments.length === 0) return '';
+    return `
+      <div class="news-attachments">
+        ${attachments.map(file => `<span class="attachment-badge">📎 ${file.name}</span>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderAttachmentsHtml(attachments = []) {
+    if (!attachments || attachments.length === 0) return '';
+    return `
+      <div class="news-item-desc">
+        <strong>Archivos adjuntos:</strong>
+        <div class="news-attachments">
+          ${attachments.map(file => file.type.startsWith('image/') ? `
+            <a href="${file.data}" target="_blank" class="attachment-badge">📷 ${file.name}</a>
+            <img class="attachment-preview" src="${file.data}" alt="${file.name}" />
+          ` : `
+            <a href="${file.data}" target="_blank" download="${file.name}" class="attachment-badge">📎 ${file.name}</a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // RENDER LIST (with optional filter)
+  function renderNews(query) {
     const list = document.getElementById('newsList');
-    if (news.length === 0) {
+    const q = (query || '').toString().trim().toLowerCase();
+    const items = q ? news.filter(item => {
+      return (item.title && item.title.toLowerCase().includes(q)) ||
+             (item.desc && item.desc.toLowerCase().includes(q)) ||
+             (item.detail && item.detail.toLowerCase().includes(q)) ||
+             (item.tag && item.tag.toLowerCase().includes(q));
+    }) : news;
+
+    if (!items || items.length === 0) {
       list.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">📋</div>
-          <p>No hay noticias aún. ¡Crea la primera!</p>
+          <p>No hay noticias que coincidan.</p>
         </div>
       `;
       return;
     }
 
-    list.innerHTML = news.map((item, idx) => `
+    list.innerHTML = items.map((item, idx) => `
       <div class="news-item">
         <div class="news-item-header">
           <div>
@@ -526,9 +624,11 @@
         </div>
         <div class="news-item-meta">📅 ${new Date(item.date).toLocaleDateString('es-MX')}</div>
         <div class="news-item-desc">${item.desc}</div>
+        ${renderAttachmentBadges(item.attachments)}
         <div class="news-item-actions">
-          <button class="btn btn-sm btn-secondary" onclick="editNews(${idx})">✎ Editar</button>
-          <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${idx})">🗑️ Eliminar</button>
+          <button class="btn btn-sm btn-info" onclick="viewNewsById(${news.indexOf(item)})">👁 Ver</button>
+          <button class="btn btn-sm btn-secondary" onclick="editNews(${news.indexOf(item)})">✎ Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${news.indexOf(item)})">🗑️ Eliminar</button>
         </div>
       </div>
     `).join('');
@@ -541,13 +641,27 @@
     document.getElementById('lastUpdate').textContent = last || 'Nunca';
   }
 
+  async function readAttachments() {
+    const files = Array.from(document.getElementById('newsAttachments').files || []);
+    if (files.length === 0) return [];
+
+    return Promise.all(files.map(file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
+      reader.onerror = () => reject(new Error('Error leyendo archivo: ' + file.name));
+      reader.readAsDataURL(file);
+    })));
+  }
+
   // FORM SUBMIT
-  document.getElementById('newsForm').addEventListener('submit', (e) => {
+  document.getElementById('newsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const id = document.getElementById('newsId').value;
+    const isEditing = id !== '';
     const title = document.getElementById('newsTitle').value.trim();
     const desc = document.getElementById('newsDesc').value.trim();
+    const detail = document.getElementById('newsDetail').value.trim();
     const tag = document.getElementById('newsTag').value;
     const icon = document.getElementById('newsIcon').value.trim() || '📋';
     const date = document.getElementById('newsDate').value;
@@ -557,21 +671,35 @@
       return;
     }
 
-    if (id) {
-      // EDIT
-      news[id] = { title, desc, tag, icon, date };
+    const newAttachments = await readAttachments();
+    const existingAttachments = isEditing ? (news[id].attachments || []) : [];
+    const attachments = isEditing ? [...existingAttachments, ...newAttachments] : newAttachments;
+
+    const newsItem = {
+      title,
+      desc,
+      detail,
+      tag,
+      icon,
+      date,
+      attachments
+    };
+
+    if (isEditing) {
+      news[id] = { ...news[id], ...newsItem };
       showAlert('✓ Noticia actualizada correctamente', 'exito');
     } else {
-      // ADD
-      news.unshift({ title, desc, tag, icon, date });
+      news.unshift(newsItem);
       showAlert('✓ Noticia agregada correctamente', 'exito');
     }
 
     saveNews();
     renderNews();
     document.getElementById('newsForm').reset();
+    document.getElementById('newsAttachments').value = '';
     document.getElementById('newsId').value = '';
     document.getElementById('submitBtn').textContent = '➕ Agregar Noticia';
+    document.querySelector('.form-section h2').textContent = '✎ Nueva Noticia';
     setTodayDate();
   });
 
@@ -581,12 +709,40 @@
     document.getElementById('newsId').value = idx;
     document.getElementById('newsTitle').value = item.title;
     document.getElementById('newsDesc').value = item.desc;
+    document.getElementById('newsDetail').value = item.detail || item.desc;
     document.getElementById('newsTag').value = item.tag;
     document.getElementById('newsIcon').value = item.icon;
     document.getElementById('newsDate').value = item.date;
     document.getElementById('submitBtn').textContent = '💾 Guardar Cambios';
     document.querySelector('.form-section h2').textContent = '✎ Editar Noticia';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function viewNews(idx) {
+    const item = news[idx];
+    const title = `${item.icon} ${item.title}`;
+    const date = new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+    const detailText = item.detail || item.desc;
+
+    document.getElementById('detailModalTitle').textContent = title;
+    document.getElementById('detailModalBody').innerHTML = `
+      <p><strong>Categoría:</strong> ${item.tag}</p>
+      <p><strong>Fecha:</strong> ${date}</p>
+      <div class="news-item-desc"><strong>Descripción breve:</strong><br>${item.desc}</div>
+      <div class="news-item-desc" style="margin-top: 1rem;"><strong>Información completa:</strong><br>${detailText.replace(/\n/g, '<br>')}</div>
+      ${renderAttachmentsHtml(item.attachments)}
+    `;
+
+    document.getElementById('detailModal').classList.add('show');
+  }
+
+  function viewNewsById(idx) {
+    // simple wrapper to keep render mappings stable
+    viewNews(idx);
+  }
+
+  function closeDetailModal() {
+    document.getElementById('detailModal').classList.remove('show');
   }
 
   // DELETE
@@ -615,6 +771,7 @@
   // RESET FORM
   function resetForm() {
     document.getElementById('newsForm').reset();
+    document.getElementById('newsAttachments').value = '';
     document.getElementById('newsId').value = '';
     document.getElementById('submitBtn').textContent = '➕ Agregar Noticia';
     document.querySelector('.form-section h2').textContent = '✎ Nueva Noticia';
@@ -631,7 +788,10 @@
 
   // CLOSE MODAL ON ESCAPE
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeDeleteModal();
+    if (e.key === 'Escape') {
+      closeDeleteModal();
+      closeDetailModal();
+    }
   });
 </script>
 

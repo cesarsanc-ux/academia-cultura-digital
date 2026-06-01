@@ -364,24 +364,32 @@
       transition: transform 0.4s cubic-bezier(.25,.8,.25,1);
     }
     .news-card {
-      min-width: 300px;
+      min-width: 240px;
+      width: 240px;
       background: var(--blanco);
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 12px rgba(0,0,0,0.07);
       flex-shrink: 0;
       transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
     }
     .news-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(97,18,50,0.12); }
     .news-card-img {
-      height: 140px;
+      height: 110px;
       background: linear-gradient(135deg, var(--guinda) 0%, var(--guinda-light) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
+      font-size: 2rem;
     }
-    .news-card-body { padding: 1.2rem; }
+    .news-card-body { padding: 1rem; }
+    .news-card-body p {
+      margin-top: 0.85rem;
+      color: var(--texto-suave);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
     .news-tag {
       display: inline-block;
       background: var(--dorado-pale);
@@ -425,6 +433,118 @@
     .carousel-btn:hover { background: var(--guinda-light); }
     .carousel-btn.prev { left: -18px; }
     .carousel-btn.next { right: -18px; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      width: min(560px, 100%);
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+      padding: 1.8rem;
+    }
+    .modal-header {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.2rem;
+      color: var(--guinda);
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    .modal-body p {
+      color: var(--texto-suave);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+    .news-modal-attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .news-modal-attachment {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 0.9rem;
+      background: #f8f4ef;
+      border-radius: 999px;
+      color: var(--texto-suave);
+      text-decoration: none;
+      border: 1px solid var(--gris-medio);
+      font-size: 0.84rem;
+    }
+    .news-modal-attachment:hover {
+      background: #fff;
+      border-color: var(--dorado);
+      color: var(--guinda);
+    }
+    .news-list-section {
+      background: var(--blanco);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      display: none;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+    .news-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+    .news-list-header h3 {
+      font-size: 1.1rem;
+      font-family: 'Montserrat', sans-serif;
+      color: var(--guinda);
+      margin: 0;
+    }
+    .news-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .news-list-card {
+      background: var(--gris-claro);
+      border-radius: 14px;
+      padding: 1rem;
+      border: 1px solid transparent;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .news-list-card:hover {
+      border-color: var(--dorado);
+      transform: translateY(-2px);
+    }
+    .news-list-card h4 {
+      font-size: 0.95rem;
+      color: var(--guinda);
+      margin-bottom: 0.5rem;
+    }
+    .news-list-card p {
+      color: var(--texto-suave);
+      font-size: 0.85rem;
+      line-height: 1.45;
+      margin-bottom: 0.75rem;
+    }
+    .news-list-card small {
+      color: var(--texto-suave);
+      font-size: 0.75rem;
+    }
 
     /* ── BIENVENIDA ── */
     #bienvenida {
@@ -1045,7 +1165,7 @@
         <div class="section-eyebrow">Avisos recientes</div>
         <h2 class="section-title">Noticias del Área</h2>
       </div>
-      <a href="#" class="see-all">Ver todos →</a>
+      <a href="#" class="see-all" onclick="showAllNews(event)">Ver todos →</a>
     </div>
     <div class="carousel-wrap">
       <button class="carousel-btn prev" onclick="moveCarousel(-1)">‹</button>
@@ -1055,6 +1175,24 @@
       <button class="carousel-btn next" onclick="moveCarousel(1)">›</button>
     </div>
   </div>
+</section>
+
+<div class="modal" id="newsDetailModal">
+  <div class="modal-content">
+    <div class="modal-header" id="newsDetailTitle">Detalle de la noticia</div>
+    <div class="modal-body" id="newsDetailBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeNewsDetailModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<section class="news-list-section" id="allNewsSection">
+  <div class="news-list-header">
+    <h3>Todas las noticias</h3>
+    <button class="btn btn-secondary" onclick="hideAllNews()">Ocultar lista</button>
+  </div>
+  <div class="news-list-grid" id="newsListContainer"></div>
 </section>
 
 <div class="section-divider"></div>
@@ -1376,8 +1514,31 @@
   // ── LOAD NEWS FROM LOCALSTORAGE ──
   function loadNews() {
     const stored = localStorage.getItem('cecytes_news');
-    const news = stored ? JSON.parse(stored) : getDefaultNews();
+    const storedNews = stored ? JSON.parse(stored) : [];
+    const news = mergeNews(storedNews, getDefaultNews());
     renderNewsCarousel(news);
+  }
+
+  function mergeNews(primary, fallback) {
+    const seen = new Set();
+    const merged = [];
+
+    primary.forEach(item => {
+      const key = `${item.title}_${item.date}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(item);
+      }
+    });
+    fallback.forEach(item => {
+      const key = `${item.title}_${item.date}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(item);
+      }
+    });
+
+    return merged;
   }
 
   function getDefaultNews() {
@@ -1385,6 +1546,7 @@
       {
         title: "Acta de Acuerdos — Reunión Nacional Mayo 2025",
         desc: "Resumen de los acuerdos más importantes de la reunión nacional de cultura digital.",
+        detail: "Los acuerdos incluyen la actualización de los lineamientos de enseñanza, calendario de actividades y la creación de nuevas redes de colaboración entre planteles.",
         tag: "Academia",
         icon: "📋",
         date: "2025-05-12"
@@ -1392,6 +1554,7 @@
       {
         title: "Próxima sesión de academia estatal — 28 junio",
         desc: "Información sobre la próxima reunión de la academia estatal.",
+        detail: "La sesión abordará estrategias de implementación de proyectos escolares y la coordinación de recursos digitales para docentes de todo el estado.",
         tag: "Calendario",
         icon: "📅",
         date: "2025-05-02"
@@ -1399,6 +1562,7 @@
       {
         title: "Nuevas planeaciones 2do parcial disponibles para descarga",
         desc: "Se han publicado los nuevos formatos de planeación para el segundo parcial.",
+        detail: "Los formatos incluyen actividades, rúbricas y herramientas digitales alineadas al nuevo marco curricular común para cada asignatura.",
         tag: "Formatos",
         icon: "📥",
         date: "2025-04-28"
@@ -1406,6 +1570,7 @@
       {
         title: "Taller: Ciudadanía Digital en el aula — Registro abierto",
         desc: "Registro abierto para el taller de ciudadanía digital dirigido a docentes.",
+        detail: "El taller ofrecerá técnicas para trabajar el pensamiento crítico, manejo seguro de datos y uso ético de redes sociales en el aula.",
         tag: "Capacitación",
         icon: "🎓",
         date: "2025-04-20"
@@ -1413,6 +1578,7 @@
       {
         title: "Actualización de credenciales SICE — Instrucciones",
         desc: "Instrucciones para actualizar credenciales en el sistema SICE.",
+        detail: "Consulta los pasos oficiales para actualizar tu usuario y contraseña dentro de SICE. Es importante realizar este proceso antes de iniciar las evaluaciones.",
         tag: "Plataformas",
         icon: "🔗",
         date: "2025-04-15"
@@ -1422,16 +1588,87 @@
 
   function renderNewsCarousel(news) {
     const track = document.getElementById('carouselTrack');
-    track.innerHTML = news.map(item => `
-      <div class="news-card">
+    track.innerHTML = news.map((item, idx) => `
+      <div class="news-card" onclick="viewNews(${idx})">
         <div class="news-card-img">${item.icon}</div>
         <div class="news-card-body">
           <span class="news-tag">${item.tag}</span>
           <div class="news-card-title">${item.title}</div>
           <div class="news-card-date">📅 ${new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          <p style="margin-top: 1rem; color: var(--texto-suave); font-size: 0.9rem; line-height: 1.5;">${item.desc}</p>
         </div>
       </div>
     `).join('');
+  }
+
+  function renderNewsAttachments(attachments = []) {
+    if (!attachments || attachments.length === 0) return '';
+
+    return `
+      <div class="news-modal-attachments">
+        ${attachments.map(file => {
+          if (file.type && file.type.startsWith('image/')) {
+            return `
+              <div class="news-modal-attachment" style="flex-direction:column; align-items:flex-start;">
+                <img src="${file.data}" alt="${file.name}" style="max-width:100%; border-radius:12px; display:block; margin-bottom:0.5rem;" />
+                <span>🖼️ ${file.name}</span>
+              </div>
+            `;
+          }
+          return `
+            <a class="news-modal-attachment" href="${file.data}" target="_blank" download="${file.name}">
+              📎 ${file.name}
+            </a>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function showAllNews(event) {
+    event.preventDefault();
+    const stored = localStorage.getItem('cecytes_news');
+    const storedNews = stored ? JSON.parse(stored) : [];
+    const news = mergeNews(storedNews, getDefaultNews());
+    const container = document.getElementById('newsListContainer');
+    container.innerHTML = news.map((item, idx) => `
+      <div class="news-list-card" onclick="viewNews(${idx})">
+        <h4>${item.icon} ${item.title}</h4>
+        <p>${item.desc}</p>
+        <small>📅 ${new Date(item.date).toLocaleDateString('es-MX')} · ${item.tag}</small>
+      </div>
+    `).join('');
+    document.getElementById('allNewsSection').style.display = 'block';
+    document.getElementById('allNewsSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function hideAllNews() {
+    document.getElementById('allNewsSection').style.display = 'none';
+  }
+
+  function viewNews(idx) {
+    const stored = localStorage.getItem('cecytes_news');
+    const storedNews = stored ? JSON.parse(stored) : [];
+    const news = mergeNews(storedNews, getDefaultNews());
+    const item = news[idx];
+    if (!item) return;
+
+    const date = new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+    const detail = item.detail || item.desc;
+
+    document.getElementById('newsDetailTitle').textContent = `${item.icon} ${item.title}`;
+    document.getElementById('newsDetailBody').innerHTML = `
+      <p><strong>Categoría:</strong> ${item.tag}</p>
+      <p><strong>Fecha:</strong> ${date}</p>
+      <p><strong>Resumen:</strong><br>${item.desc}</p>
+      <p><strong>Contenido completo:</strong><br>${detail.replace(/\n/g, '<br>')}</p>
+      ${renderNewsAttachments(item.attachments)}
+    `;
+    document.getElementById('newsDetailModal').classList.add('show');
+  }
+
+  function closeNewsDetailModal() {
+    document.getElementById('newsDetailModal').classList.remove('show');
   }
 
   // ── CAROUSEL ──
