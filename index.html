@@ -7,12 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --guinda: #4f132f;
-      --guinda-dark: #26070f;
-      --guinda-light: #6b1f42;
-      --dorado: #8b6e27;
-      --dorado-light: #a88f3d;
-      --dorado-pale: #d8ccb1;
+      --guinda: #1f4f25;
+      --guinda-dark: #112b17;
+      --guinda-light: #3f7f4d;
+      --dorado: #6a8b32;
+      --dorado-light: #9fb68d;
+      --dorado-pale: #d9e7d8;
       --blanco: #f3f0ec;
       --gris-claro: #e6dfd8;
       --gris-medio: #c9bfb5;
@@ -1116,7 +1116,8 @@
   <a href="https://educacionmediasuperior.sep.gob.mx/" target="_blank">SEMS</a>
   <a href="mailto:direccion@cecytes.edu.mx">Correo Institucional</a>
   <a href="https://drive.google.com/drive/folders/1NdN7TG83XmWwYaXSNBePs6esL5RFtEmx?usp=sharing">Directorio</a>
-  <a href="login.html" target="_blank">Config</a>
+  <a href="admin-noticias.html" target="_blank">Config</a>
+  <a href="panel.html" target="_blank">Panel de Diseño</a>
 </div>
 
 <!-- NAVBAR -->
@@ -1783,22 +1784,6 @@
   document.addEventListener('DOMContentLoaded', loadNews);
 </script>
 
-<div style="position:fixed;bottom:20px;right:20px;z-index:9999;background:white;padding:10px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.2)">
-<select id="themeSelector">
-<option value="verde">Verde</option>
-<option value="naranja">Naranja</option>
-<option value="azul">Azul</option>
-<option value="guinda">Guinda</option>
-</select>
-</div>
-
-<script>
-document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'verde');
-document.getElementById('themeSelector').value=localStorage.getItem('theme')||'verde';
-document.getElementById('themeSelector').addEventListener('change',function(){
-  document.documentElement.setAttribute('data-theme',this.value);
-  localStorage.setItem('theme',this.value);
-});
-</script>
+<script src="assets/theme.js"></script>
 </body>
 </html>
