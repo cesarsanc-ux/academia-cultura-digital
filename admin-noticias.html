@@ -168,6 +168,13 @@
       color: var(--texto);
     }
     .btn-secondary:hover { background: var(--gris-claro); }
+    .theme-swatch-bar { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0.75rem; margin: 1.5rem 0; }
+    .theme-swatch { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.85rem 1rem; border: 1px solid var(--gris-medio); border-radius: 12px; background: var(--blanco); cursor: pointer; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+    .theme-swatch:hover { transform: translateY(-2px); border-color: var(--dorado); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+    .theme-swatch.active { box-shadow: 0 0 0 3px rgba(106,139,50,0.18); }
+    .theme-swatch-title { font-weight: 700; color: var(--guinda); }
+    .theme-swatch-palette { display: flex; gap: 0.4rem; }
+    .theme-swatch-dot { width: 18px; height: 18px; border-radius: 50%; }
     .btn-sm {
       padding: 0.5rem 1rem;
       font-size: 0.75rem;
@@ -392,10 +399,44 @@
       <span style="color: rgba(255,255,255,0.8); font-size: 0.8rem;">👤 <span id="currentUser">usuario</span></span>
       <a href="#" onclick="logout(event)">🚪 Salir</a>
       <a href="index.html" target="_blank">← Volver al sitio</a>
-      <a href="panel.html" target="_blank">Panel de Diseño</a>
     </div>
   </div>
 </header>
+
+<div class="theme-swatch-bar" aria-label="Seleccionar tema">
+  <button class="theme-swatch" type="button" data-theme-preset="verde">
+    <span class="theme-swatch-title">Verde</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#1f4f25"></span>
+      <span class="theme-swatch-dot" style="background:#6a8b32"></span>
+      <span class="theme-swatch-dot" style="background:#f3f0ec"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="naranja">
+    <span class="theme-swatch-title">Naranja</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#b25c00"></span>
+      <span class="theme-swatch-dot" style="background:#c58c00"></span>
+      <span class="theme-swatch-dot" style="background:#fff7ee"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="azul">
+    <span class="theme-swatch-title">Azul</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#104a8c"></span>
+      <span class="theme-swatch-dot" style="background:#1da0c3"></span>
+      <span class="theme-swatch-dot" style="background:#f6fbff"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="vino">
+    <span class="theme-swatch-title">Vino</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#4f132f"></span>
+      <span class="theme-swatch-dot" style="background:#8b6e27"></span>
+      <span class="theme-swatch-dot" style="background:#f3f0ec"></span>
+    </div>
+  </button>
+</div>
 
 <!-- MAIN -->
 <main>
@@ -794,7 +835,6 @@
       closeDetailModal();
     }
   });
-</script>
 </script>
 <script src="assets/theme.js"></script>
 

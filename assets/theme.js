@@ -32,6 +32,12 @@
     Object.entries(vars||{}).forEach(([k,v])=>{
       try{ root.style.setProperty(k, v); }catch(e){}
     });
+    if(vars && vars['--blanco']){
+      root.style.setProperty('--card', vars['--blanco']);
+    }
+    if(vars && vars['--texto-suave']){
+      root.style.setProperty('--muted', vars['--texto-suave']);
+    }
   }
 
   function applyFont(font){
@@ -56,92 +62,49 @@
     if(stored.font) applyFont(stored.font);
   }
 
-  // Expose for panel
+  // Expose public helpers
   window.ThemeManager = {
     PRESETS, applyVars, applyFont, saveTheme, loadTheme
   };
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    applyStored();
+  function updateSwatchState(activeName){
+    document.querySelectorAll('[data-theme-preset]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.themePreset === activeName);
+    });
+  }
 
-    // If panel exists, wire the UI
-    const panel = document.getElementById('theme-manager');
-    if(!panel) return;
+  function bindThemeSwatches(){
+    const swatches = document.querySelectorAll('[data-theme-preset]');
+    if(!swatches.length) return;
 
-    const presetContainer = document.getElementById('presets');
-    const colorInputs = {
-      guinda: document.getElementById('color-guinda'),
-      dorado: document.getElementById('color-dorado'),
-      blanco: document.getElementById('color-blanco'),
-      texto: document.getElementById('color-texto')
-    };
-    const fontSelect = document.getElementById('fontSelect');
-    const applyBtn = document.getElementById('applyPreview');
-    const saveBtn = document.getElementById('saveTheme');
-    const resetBtn = document.getElementById('resetTheme');
+    swatches.forEach(btn => {
+      const preset = btn.dataset.themePreset;
+      if(!PRESETS[preset]) return;
 
-    // build preset buttons
-    Object.keys(PRESETS).forEach(name=>{
-      const btn = document.createElement('button');
-      btn.type='button'; btn.className='preset-btn'; btn.textContent = name.charAt(0).toUpperCase()+name.slice(1);
-      btn.addEventListener('click', ()=>{
-        const vars = PRESETS[name]; applyVars(vars); applyFont(fontSelect.value);
-        saveTheme({ type:'preset', name, font: fontSelect.value });
-        showStatus('Tema aplicado: '+name);
+      btn.addEventListener('click', () => {
+        const vars = PRESETS[preset];
+        applyVars(vars);
+        const stored = loadTheme() || {};
+        saveTheme({ type:'preset', name: preset, font: stored.font || '"Open Sans", sans-serif' });
+        document.documentElement.dataset.theme = preset;
+        updateSwatchState(preset);
       });
-      presetContainer.appendChild(btn);
     });
+  }
 
-    // populate inputs from current stored or defaults
+  function initTheme(){
+    applyStored();
     const stored = loadTheme();
-    if(stored){
-      if(stored.type==='preset' && PRESETS[stored.name]){
-        const vars = PRESETS[stored.name];
-        colorInputs.guinda.value = vars['--guinda'] || '#000000';
-        colorInputs.dorado.value = vars['--dorado'] || '#000000';
-        colorInputs.blanco.value = vars['--blanco'] || '#ffffff';
-        colorInputs.texto.value = vars['--texto'] || '#111111';
-      } else if(stored.type==='custom' && stored.vars){
-        colorInputs.guinda.value = stored.vars['--guinda'] || '#000000';
-        colorInputs.dorado.value = stored.vars['--dorado'] || '#000000';
-        colorInputs.blanco.value = stored.vars['--blanco'] || '#ffffff';
-        colorInputs.texto.value = stored.vars['--texto'] || '#111111';
-      }
-      if(stored.font) fontSelect.value = stored.font;
+    if(stored && stored.type === 'preset' && stored.name){
+      document.documentElement.dataset.theme = stored.name;
+      updateSwatchState(stored.name);
     }
+    bindThemeSwatches();
+  }
 
-    applyBtn.addEventListener('click', ()=>{
-      const vars = {
-        '--guinda': colorInputs.guinda.value,
-        '--dorado': colorInputs.dorado.value,
-        '--blanco': colorInputs.blanco.value,
-        '--texto': colorInputs.texto.value
-      };
-      applyVars(vars); applyFont(fontSelect.value);
-      showStatus('Vista previa aplicada');
-    });
-
-    saveBtn.addEventListener('click', ()=>{
-      const vars = {
-        '--guinda': colorInputs.guinda.value,
-        '--dorado': colorInputs.dorado.value,
-        '--blanco': colorInputs.blanco.value,
-        '--texto': colorInputs.texto.value
-      };
-      saveTheme({ type:'custom', vars, font: fontSelect.value });
-      showStatus('Tema guardado');
-    });
-
-    resetBtn.addEventListener('click', ()=>{
-      localStorage.removeItem(KEY);
-      applyVars(PRESETS.verde);
-      applyFont('"Open Sans", sans-serif');
-      showStatus('Restaurado al tema por defecto');
-    });
-
-    function showStatus(msg){
-      const el = document.getElementById('status');
-      if(!el) return; el.textContent = msg; el.style.opacity=1; setTimeout(()=>el.style.opacity=0,2500);
-    }
-  });
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initTheme);
+  } else {
+    initTheme();
+  }
 })();

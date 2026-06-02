@@ -46,6 +46,31 @@
     }
     .topbar a { color: var(--dorado-light); text-decoration: none; }
     .topbar a:hover { text-decoration: underline; }
+  .theme-swatch-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.85rem 2rem;
+    background: rgba(255,255,255,0.12);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    justify-content: center;
+  }
+  .theme-swatch {
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.95);
+    min-width: 120px;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    color: var(--guinda-dark);
+  }
+  .theme-swatch:hover { transform: translateY(-2px); border-color: var(--dorado); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+  .theme-swatch.active { box-shadow: 0 0 0 3px rgba(37,160,195,0.18); }
+  .theme-swatch-title { display: block; font-family: 'Montserrat', sans-serif; font-weight: 700; margin-bottom: 0.45rem; color: var(--guinda); }
+  .theme-swatch-palette { display: flex; gap: 0.25rem; }
+  .theme-swatch-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
 
     /* ── NAVBAR ── */
     nav {
@@ -1117,7 +1142,41 @@
   <a href="mailto:direccion@cecytes.edu.mx">Correo Institucional</a>
   <a href="https://drive.google.com/drive/folders/1NdN7TG83XmWwYaXSNBePs6esL5RFtEmx?usp=sharing">Directorio</a>
   <a href="admin-noticias.html" target="_blank">Config</a>
-  <a href="panel.html" target="_blank">Panel de Diseño</a>
+</div>
+
+<div class="theme-swatch-bar" aria-label="Seleccionar tema">
+  <button class="theme-swatch" type="button" data-theme-preset="verde">
+    <span class="theme-swatch-title">Verde</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#1f4f25"></span>
+      <span class="theme-swatch-dot" style="background:#6a8b32"></span>
+      <span class="theme-swatch-dot" style="background:#f3f0ec"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="naranja">
+    <span class="theme-swatch-title">Naranja</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#b25c00"></span>
+      <span class="theme-swatch-dot" style="background:#c58c00"></span>
+      <span class="theme-swatch-dot" style="background:#fff7ee"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="azul">
+    <span class="theme-swatch-title">Azul</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#104a8c"></span>
+      <span class="theme-swatch-dot" style="background:#1da0c3"></span>
+      <span class="theme-swatch-dot" style="background:#f6fbff"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="vino">
+    <span class="theme-swatch-title">Vino</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#4f132f"></span>
+      <span class="theme-swatch-dot" style="background:#8b6e27"></span>
+      <span class="theme-swatch-dot" style="background:#f3f0ec"></span>
+    </div>
+  </button>
 </div>
 
 <!-- NAVBAR -->
