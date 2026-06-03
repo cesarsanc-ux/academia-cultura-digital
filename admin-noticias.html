@@ -558,6 +558,33 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <div class="modal-header">⚠️ Eliminar Noticia</div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas eliminar esta noticia?</p>
+      <p id="deleteConfirmText" style="font-weight: 600; color: var(--guinda);">Título de la noticia</p>
+      <p style="font-size: 0.85rem;">Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="detailModal">
+  <div class="modal-content">
+    <div class="modal-header" id="detailModalTitle">Detalle de noticia</div>
+    <div class="modal-body" id="detailModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeDetailModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/default-news.js"></script>
 <script src="auth.js"></script>
 <script>
   // Logout function
@@ -573,6 +600,7 @@
   // STATE
   let news = [];
   let deleteTargetId = null;
+  let allNews = []; // Todas las noticias (guardadas + por defecto + marcadas para eliminar)
 
   // INIT
   document.addEventListener('DOMContentLoaded', () => {
@@ -594,10 +622,23 @@
     document.getElementById('newsDate').value = today;
   }
 
-  // LOAD FROM LOCALSTORAGE
+  // LOAD FROM LOCALSTORAGE y MERGE con noticias por defecto
   function loadNews() {
     const stored = localStorage.getItem('cecytes_news');
-    news = stored ? JSON.parse(stored) : [];
+    const customNews = stored ? JSON.parse(stored) : [];
+    
+    // Obtener lista de noticias por defecto que están ocultas
+    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenDefaults') || '[]');
+    
+    // Combinar: noticias personalizadas + noticias por defecto (excepto las ocultas)
+    const visibleDefaults = DEFAULT_NEWS.filter(item => {
+      const key = `${item.title}_${item.date}`;
+      return !hiddenDefaults.includes(key);
+    });
+    
+    news = customNews;
+    allNews = [...visibleDefaults, ...customNews].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
     renderNews();
     updateStats();
   }
@@ -639,12 +680,12 @@
   function renderNews(query) {
     const list = document.getElementById('newsList');
     const q = (query || '').toString().trim().toLowerCase();
-    const items = q ? news.filter(item => {
+    const items = q ? allNews.filter(item => {
       return (item.title && item.title.toLowerCase().includes(q)) ||
              (item.desc && item.desc.toLowerCase().includes(q)) ||
              (item.detail && item.detail.toLowerCase().includes(q)) ||
              (item.tag && item.tag.toLowerCase().includes(q));
-    }) : news;
+    }) : allNews;
 
     if (!items || items.length === 0) {
       list.innerHTML = `
@@ -656,29 +697,35 @@
       return;
     }
 
-    list.innerHTML = items.map((item, idx) => `
-      <div class="news-item">
-        <div class="news-item-header">
-          <div>
-            <div class="news-item-title">${item.icon} ${item.title}</div>
-            <div class="news-item-tag">${item.tag}</div>
+    list.innerHTML = items.map((item, idx) => {
+      const isDefault = item.isDefault;
+      const realIdx = allNews.indexOf(item);
+      const badge = isDefault ? '<span style="display:inline-block;background:var(--dorado-pale);color:var(--dorado);font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:0.5rem;">Por defecto</span>' : '';
+      
+      return `
+        <div class="news-item">
+          <div class="news-item-header">
+            <div>
+              <div class="news-item-title">${item.icon} ${item.title}${badge}</div>
+              <div class="news-item-tag">${item.tag}</div>
+            </div>
+          </div>
+          <div class="news-item-meta">📅 ${new Date(item.date).toLocaleDateString('es-MX')}</div>
+          <div class="news-item-desc">${item.desc}</div>
+          ${renderAttachmentBadges(item.attachments)}
+          <div class="news-item-actions">
+            <button class="btn btn-sm btn-info" onclick="viewNewsById(${realIdx})">👁 Ver</button>
+            ${isDefault ? '' : `<button class="btn btn-sm btn-secondary" onclick="editNews(${realIdx})">✎ Editar</button>`}
+            <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${realIdx}, ${isDefault})">🗑️ Eliminar</button>
           </div>
         </div>
-        <div class="news-item-meta">📅 ${new Date(item.date).toLocaleDateString('es-MX')}</div>
-        <div class="news-item-desc">${item.desc}</div>
-        ${renderAttachmentBadges(item.attachments)}
-        <div class="news-item-actions">
-          <button class="btn btn-sm btn-info" onclick="viewNewsById(${news.indexOf(item)})">👁 Ver</button>
-          <button class="btn btn-sm btn-secondary" onclick="editNews(${news.indexOf(item)})">✎ Editar</button>
-          <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${news.indexOf(item)})">🗑️ Eliminar</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   // UPDATE STATS
   function updateStats() {
-    document.getElementById('totalNews').textContent = news.length;
+    document.getElementById('totalNews').textContent = allNews.length;
     const last = localStorage.getItem('cecytes_lastUpdate');
     document.getElementById('lastUpdate').textContent = last || 'Nunca';
   }
@@ -714,7 +761,7 @@
     }
 
     const newAttachments = await readAttachments();
-    const existingAttachments = isEditing ? (news[id].attachments || []) : [];
+    const existingAttachments = isEditing ? (allNews[id]?.attachments || []) : [];
     const attachments = isEditing ? [...existingAttachments, ...newAttachments] : newAttachments;
 
     const newsItem = {
@@ -728,10 +775,17 @@
     };
 
     if (isEditing) {
-      news[id] = { ...news[id], ...newsItem };
+      allNews[id] = { ...allNews[id], ...newsItem };
+      // Si es una noticia personalizada, actualizar también en news array
+      const newsIdx = news.findIndex(n => n.title === allNews[id].title && n.date === allNews[id].date);
+      if (newsIdx >= 0) {
+        news[newsIdx] = { ...news[newsIdx], ...newsItem };
+      }
       showAlert('✓ Noticia actualizada correctamente', 'exito');
     } else {
-      news.unshift(newsItem);
+      const newItem = { ...newsItem, isDefault: false };
+      news.unshift(newItem);
+      allNews.unshift(newItem);
       showAlert('✓ Noticia agregada correctamente', 'exito');
     }
 
@@ -747,7 +801,11 @@
 
   // EDIT NEWS
   function editNews(idx) {
-    const item = news[idx];
+    const item = allNews[idx];
+    if (item.isDefault) {
+      showAlert('Las noticias por defecto no se pueden editar. Elimina esta y crea una nueva personalizada.', 'info');
+      return;
+    }
     document.getElementById('newsId').value = idx;
     document.getElementById('newsTitle').value = item.title;
     document.getElementById('newsDesc').value = item.desc;
@@ -761,7 +819,7 @@
   }
 
   function viewNews(idx) {
-    const item = news[idx];
+    const item = allNews[idx];
     const title = `${item.icon} ${item.title}`;
     const date = new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
     const detailText = item.detail || item.desc;
@@ -788,9 +846,9 @@
   }
 
   // DELETE
-  function openDeleteModal(idx) {
-    deleteTargetId = idx;
-    const title = news[idx].title;
+  function openDeleteModal(idx, isDefault) {
+    deleteTargetId = { idx, isDefault };
+    const title = allNews[idx].title;
     document.getElementById('deleteConfirmText').textContent = title;
     document.getElementById('deleteModal').classList.add('show');
   }
@@ -802,14 +860,31 @@
 
   function confirmDelete() {
     if (deleteTargetId !== null) {
-      news.splice(deleteTargetId, 1);
-      saveNews();
-      renderNews();
-      showAlert('✓ Noticia eliminada correctamente', 'exito');
+      const { idx, isDefault } = deleteTargetId;
+      const item = allNews[idx];
+      
+      if (isDefault) {
+        // Guardar en lista de noticias por defecto ocultas
+        const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenDefaults') || '[]');
+        const key = `${item.title}_${item.date}`;
+        if (!hiddenDefaults.includes(key)) {
+          hiddenDefaults.push(key);
+          localStorage.setItem('cecytes_hiddenDefaults', JSON.stringify(hiddenDefaults));
+        }
+        showAlert('✓ Noticia por defecto oculta (puedes restaurarla eliminando la marca en el código)', 'exito');
+      } else {
+        // Eliminar de noticias personalizadas
+        news.splice(news.findIndex(n => n.title === item.title && n.date === item.date), 1);
+        saveNews();
+        showAlert('✓ Noticia eliminada correctamente', 'exito');
+      }
+      
+      loadNews(); // Recargar todas las noticias
       closeDeleteModal();
     }
   }
 
+  // RESET FORM
   // RESET FORM
   function resetForm() {
     document.getElementById('newsForm').reset();

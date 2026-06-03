@@ -1638,8 +1638,8 @@
   </div>
 </footer>
 
+<script src="assets/default-news.js"></script>
 <script>
-  // ── HAMBURGER NAV ──
   function toggleNav() {
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
@@ -1667,6 +1667,9 @@
   function mergeNews(primary, fallback) {
     const seen = new Set();
     const merged = [];
+    
+    // Obtener lista de noticias por defecto que están ocultas
+    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenDefaults') || '[]');
 
     primary.forEach(item => {
       const key = `${item.title}_${item.date}`;
@@ -1675,9 +1678,11 @@
         merged.push(item);
       }
     });
+    
     fallback.forEach(item => {
       const key = `${item.title}_${item.date}`;
-      if (!seen.has(key)) {
+      // No añadir si está en la lista de ocultas
+      if (!seen.has(key) && !hiddenDefaults.includes(key)) {
         seen.add(key);
         merged.push(item);
       }
@@ -1687,48 +1692,8 @@
   }
 
   function getDefaultNews() {
-    return [
-      {
-        title: "Acta de Acuerdos — Reunión Nacional Mayo 2025",
-        desc: "Resumen de los acuerdos más importantes de la reunión nacional de cultura digital.",
-        detail: "Los acuerdos incluyen la actualización de los lineamientos de enseñanza, calendario de actividades y la creación de nuevas redes de colaboración entre planteles.",
-        tag: "Academia",
-        icon: "📋",
-        date: "2025-05-12"
-      },
-      {
-        title: "Próxima sesión de academia estatal — 28 junio",
-        desc: "Información sobre la próxima reunión de la academia estatal.",
-        detail: "La sesión abordará estrategias de implementación de proyectos escolares y la coordinación de recursos digitales para docentes de todo el estado.",
-        tag: "Calendario",
-        icon: "📅",
-        date: "2025-05-02"
-      },
-      {
-        title: "Nuevas planeaciones 2do parcial disponibles para descarga",
-        desc: "Se han publicado los nuevos formatos de planeación para el segundo parcial.",
-        detail: "Los formatos incluyen actividades, rúbricas y herramientas digitales alineadas al nuevo marco curricular común para cada asignatura.",
-        tag: "Formatos",
-        icon: "📥",
-        date: "2025-04-28"
-      },
-      {
-        title: "Taller: Ciudadanía Digital en el aula — Registro abierto",
-        desc: "Registro abierto para el taller de ciudadanía digital dirigido a docentes.",
-        detail: "El taller ofrecerá técnicas para trabajar el pensamiento crítico, manejo seguro de datos y uso ético de redes sociales en el aula.",
-        tag: "Capacitación",
-        icon: "🎓",
-        date: "2025-04-20"
-      },
-      {
-        title: "Actualización de credenciales SICE — Instrucciones",
-        desc: "Instrucciones para actualizar credenciales en el sistema SICE.",
-        detail: "Consulta los pasos oficiales para actualizar tu usuario y contraseña dentro de SICE. Es importante realizar este proceso antes de iniciar las evaluaciones.",
-        tag: "Plataformas",
-        icon: "🔗",
-        date: "2025-04-15"
-      }
-    ];
+    // Usar noticias por defecto sincronizadas desde assets/default-news.js
+    return DEFAULT_NEWS || [];
   }
 
   function renderNewsCarousel(news) {
