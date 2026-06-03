@@ -868,6 +868,7 @@
       transition: background 0.2s, border-color 0.2s;
       text-decoration: none;
       display: block;
+      cursor: pointer;
     }
     .academia-card:hover {
       background: rgba(255,255,255,0.26);
@@ -1028,6 +1029,129 @@
       font-size: 0.75rem;
     }
     .footer-bottom .dorado { color: var(--dorado-light); }
+
+    /* ── MODAL ENLACE ACADEMIA ── */
+    #linkModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 1100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    #linkModal.show { display: flex; }
+    .link-modal-content {
+      width: min(900px, 100%);
+      height: min(82vh, 700px);
+      background: var(--guinda-dark);
+      border-radius: 16px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .link-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.4rem;
+      background: var(--guinda);
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    .link-modal-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .link-modal-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+    .link-modal-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+    .link-modal-btn:hover { background: rgba(255,255,255,0.28); }
+    .link-modal-close {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .link-modal-close:hover { background: rgba(255,255,255,0.25); }
+    .link-modal-iframe-wrap {
+      flex: 1;
+      position: relative;
+      background: #fff;
+    }
+    .link-modal-iframe-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    .link-modal-fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1.2rem;
+      text-align: center;
+      padding: 2rem;
+      background: var(--gris-claro);
+    }
+    .link-modal-fallback p {
+      color: var(--texto-suave);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .link-modal-fallback .open-ext-btn {
+      background: var(--guinda);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .link-modal-fallback .open-ext-btn:hover { background: var(--guinda-light); }
 
     /* ── DIVIDER ── */
     .section-divider {
@@ -1484,30 +1608,30 @@
     <div class="section-eyebrow">Espacio normativo y de acuerdos</div>
     <h2 class="section-title">Academia Nacional</h2>
     <div class="academia-grid reveal">
-      <a href="https://drive.google.com/drive/folders/1-0PZcDHnIEw-X6QUkfXjwTpOyS9OH2pY?usp=sharing" class="academia-card">
+      <div class="academia-card" onclick="openLinkModal('https://drive.google.com/embeddedfolderview?id=1-0PZcDHnIEw-X6QUkfXjwTpOyS9OH2pY#list', 'Formatos Descargables', 'https://drive.google.com/drive/folders/1-0PZcDHnIEw-X6QUkfXjwTpOyS9OH2pY?usp=sharing')">
         <div class="academia-card-icon">📄</div>
         <h3>Formatos Descargables</h3>
         <p>Planeaciones, secuencias didácticas y listas de cotejo en formato Word y PDF listos para usar.</p>
         <div class="ac-link">Descargar formatos →</div>
-      </a>
-      <a href="https://drive.google.com/drive/folders/1_wr0wQC_eURY-z9MbDpXMSxrgZM3fTj2?usp=sharing" class="academia-card">
+      </div>
+      <div class="academia-card" onclick="openLinkModal('https://drive.google.com/embeddedfolderview?id=1_wr0wQC_eURY-z9MbDpXMSxrgZM3fTj2#list', 'Actas de Acuerdos', 'https://drive.google.com/drive/folders/1_wr0wQC_eURY-z9MbDpXMSxrgZM3fTj2?usp=sharing')">
         <div class="academia-card-icon">📝</div>
         <h3>Actas de Acuerdos</h3>
         <p>Historial completo de reuniones nacionales y estatales, organizadas por fecha y nivel.</p>
         <div class="ac-link">Ver actas →</div>
-      </a>
-      <a href="https://calendar.google.com/calendar/embed?src=c_4fb76ee91f2701b614a21cabecb7be09549c9f43259c3c0539b28ee8bec6418f%40group.calendar.google.com&ctz=America%2FMexico_City" class="academia-card">
+      </div>
+      <div class="academia-card" onclick="openLinkModal('https://calendar.google.com/calendar/embed?src=c_4fb76ee91f2701b614a21cabecb7be09549c9f43259c3c0539b28ee8bec6418f%40group.calendar.google.com&ctz=America%2FMexico_City', 'Calendario de Sesiones', 'https://calendar.google.com/calendar/embed?src=c_4fb76ee91f2701b614a21cabecb7be09549c9f43259c3c0539b28ee8bec6418f%40group.calendar.google.com&ctz=America%2FMexico_City')">
         <div class="academia-card-icon">📆</div>
         <h3>Calendario de Sesiones</h3>
         <p>Calendario de Google integrado con todas las próximas reuniones de academia del ciclo.</p>
         <div class="ac-link">Ver calendario →</div>
-      </a>
-      <a href="https://drive.google.com/drive/folders/1QMk_QVFPM5VaOHFGOXSc_NlwAuO2Ukv7?usp=sharing" class="academia-card">
+      </div>
+      <div class="academia-card" onclick="openLinkModal('https://drive.google.com/embeddedfolderview?id=1QMk_QVFPM5VaOHFGOXSc_NlwAuO2Ukv7#list', 'Acuerdos Vigentes', 'https://drive.google.com/drive/folders/1QMk_QVFPM5VaOHFGOXSc_NlwAuO2Ukv7?usp=sharing')">
         <div class="academia-card-icon">🤝</div>
         <h3>Acuerdos Vigentes</h3>
         <p>Resumen ejecutivo de los acuerdos en vigor para implementación en plantel.</p>
         <div class="ac-link">Consultar →</div>
-      </a>
+      </div>
     </div>
   </div>
 </section>
@@ -1594,6 +1718,27 @@
     </div>
   </div>
 </section>
+
+<!-- ════ MODAL ENLACE ACADEMIA ════ -->
+<div id="linkModal" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+  <div class="link-modal-content">
+    <div class="link-modal-header">
+      <span class="link-modal-title" id="linkModalTitle">Recurso</span>
+      <div class="link-modal-actions">
+        <a id="linkModalExtBtn" href="#" target="_blank" class="link-modal-btn">↗ Abrir en nueva pestaña</a>
+        <button class="link-modal-close" onclick="closeLinkModal()" aria-label="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="link-modal-iframe-wrap" id="linkModalIframeWrap">
+      <iframe id="linkModalIframe" src="" title="Recurso de Academia" allowfullscreen></iframe>
+      <div class="link-modal-fallback" id="linkModalFallback">
+        <span style="font-size:3rem">🔒</span>
+        <p>Este recurso no permite mostrarse en un marco integrado.<br>Puedes abrirlo directamente en una nueva pestaña.</p>
+        <a id="linkModalFallbackBtn" href="#" target="_blank" class="open-ext-btn">↗ Abrir en nueva pestaña</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ════ FOOTER ════ -->
 <div class="section-divider"></div>
@@ -1819,6 +1964,64 @@
       const active = y >= sec.offsetTop && y < sec.offsetTop + sec.offsetHeight;
       link.classList.toggle('active', active);
     });
+  });
+
+  // ── MODAL ENLACE ACADEMIA ──
+  function openLinkModal(embedUrl, titulo, externalUrl) {
+    const modal = document.getElementById('linkModal');
+    const iframe = document.getElementById('linkModalIframe');
+    const extBtn = document.getElementById('linkModalExtBtn');
+    const fallbackEl = document.getElementById('linkModalFallback');
+    const fallbackBtn = document.getElementById('linkModalFallbackBtn');
+    const titleEl = document.getElementById('linkModalTitle');
+
+    const ext = externalUrl || embedUrl;
+    titleEl.textContent = titulo;
+    extBtn.href = ext;
+    fallbackBtn.href = ext;
+    fallbackEl.style.display = 'none';
+    iframe.style.display = 'block';
+    iframe.src = embedUrl;
+
+    iframe.onerror = function() {
+      iframe.style.display = 'none';
+      fallbackEl.style.display = 'flex';
+    };
+
+    const fallbackTimer = setTimeout(function() {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc || doc.body.innerHTML === '') {
+          iframe.style.display = 'none';
+          fallbackEl.style.display = 'flex';
+        }
+      } catch(e) {
+        // cross-origin cargado correctamente, no hacer nada
+      }
+    }, 5000);
+
+    iframe.onload = function() { clearTimeout(fallbackTimer); };
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLinkModal() {
+    const modal = document.getElementById('linkModal');
+    const iframe = document.getElementById('linkModalIframe');
+    modal.classList.remove('show');
+    iframe.src = '';
+    document.body.style.overflow = '';
+  }
+
+  // Cerrar modal al hacer clic en el fondo oscuro
+  document.getElementById('linkModal').addEventListener('click', function(e) {
+    if (e.target === this) closeLinkModal();
+  });
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLinkModal();
   });
 
   // ── INIT ──
