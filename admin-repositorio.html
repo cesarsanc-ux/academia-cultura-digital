@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrador de Repositorio — Cultura Digital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --guinda: #1f4f25;
+      --guinda-dark: #112b17;
+      --guinda-light: #3f7f4d;
+      --dorado: #6a8b32;
+      --dorado-light: #9fb68d;
+      --dorado-pale: #d9e7d8;
+      --blanco: #ffffff;
+      --gris-claro: #f7f4f0;
+      --gris-medio: #e8e2d9;
+      --texto: #1a1a1a;
+      --texto-suave: #5a5a5a;
+      --exito: #15803d;
+      --error: #c0392b;
+      --info: #2563eb;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--texto);
+      background: var(--gris-claro);
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--guinda);
+      color: #fff;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .header-subtitle { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+    .header-links a {
+      color: var(--dorado-light);
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    .header-links a:hover { color: var(--dorado); }
+
+    /* THEME SWATCH BAR */
+    .theme-swatch-bar {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--guinda-dark);
+      padding: 0.5rem 2rem;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .theme-swatch {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .theme-swatch:hover { background: rgba(255,255,255,0.18); }
+    .theme-swatch-title { letter-spacing: 0.05em; }
+    .theme-swatch-palette { display: flex; gap: 3px; }
+    .theme-swatch-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    /* MAIN */
+    main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    /* ALERT */
+    .alert {
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      display: none;
+      font-weight: 500;
+    }
+    .alert.show { display: block; }
+    .alert.exito { background: #d1fae5; color: var(--exito); border-left: 4px solid var(--exito); }
+    .alert.error { background: #fee2e2; color: var(--error); border-left: 4px solid var(--error); }
+    .alert.info { background: #dbeafe; color: var(--info); border-left: 4px solid var(--info); }
+
+    /* STATS */
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      min-width: 180px;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.07em; }
+    .stat-value { font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--guinda); }
+
+    /* GRID */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    /* FORM SECTION */
+    .form-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .form-section h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--guinda);
+      margin-bottom: 1.5rem;
+    }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--texto-suave);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.4rem;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--gris-medio);
+      border-radius: 8px;
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--texto);
+      background: var(--gris-claro);
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--guinda);
+      background: #fff;
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .url-hint {
+      font-size: 0.72rem;
+      color: var(--texto-suave);
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
+    .url-hint code {
+      background: var(--gris-medio);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.7rem;
+    }
+
+    .form-actions { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .btn {
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      border: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--guinda); color: #fff; }
+    .btn-primary:hover { background: var(--guinda-light); }
+    .btn-secondary { background: var(--gris-medio); color: var(--texto); }
+    .btn-secondary:hover { background: #d3cdc4; }
+    .btn-danger { background: #fee2e2; color: var(--error); }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-info { background: #dbeafe; color: var(--info); }
+    .btn-info:hover { background: #bfdbfe; }
+    .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.75rem; }
+
+    /* LIST SECTION */
+    .list-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .list-section h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--guinda);
+      margin-bottom: 1.5rem;
+    }
+    .repo-list { display: flex; flex-direction: column; gap: 0.85rem; max-height: 600px; overflow-y: auto; padding-right: 4px; }
+
+    .repo-list-item {
+      border: 1px solid var(--gris-medio);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      background: var(--gris-claro);
+      transition: border-color 0.2s;
+    }
+    .repo-list-item:hover { border-color: var(--dorado); }
+    .repo-list-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .repo-list-item-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--guinda);
+      flex: 1;
+    }
+    .repo-list-item-meta { font-size: 0.72rem; color: var(--texto-suave); margin-top: 0.3rem; }
+    .repo-list-item-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; align-items: center; }
+    .repo-list-item-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.7rem; }
+
+    .badge { font-size: 0.65rem; font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 2px 8px; border-radius: 4px; }
+    .badge-pdf { background: #fde8e8; color: #c0392b; }
+    .badge-word { background: #e8eeff; color: #2563eb; }
+    .badge-slides { background: #fef3e8; color: #d97706; }
+    .badge-video { background: #e8f5e9; color: #15803d; }
+    .badge-default { background: var(--dorado-pale); color: var(--dorado); }
+    .badge-cat { background: #f3e8ff; color: #7c3aed; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--texto-suave); }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: #fff;
+      border-radius: 14px;
+      width: min(500px, 95vw);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .modal-header {
+      background: var(--guinda);
+      color: #fff;
+      padding: 1.2rem 1.5rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .modal-body { padding: 1.5rem; font-size: 0.9rem; line-height: 1.6; }
+    .modal-body p { margin-bottom: 0.5rem; }
+    .modal-actions { padding: 1rem 1.5rem; display: flex; gap: 0.8rem; justify-content: flex-end; border-top: 1px solid var(--gris-medio); }
+
+    /* DETAIL MODAL */
+    .detail-modal-content {
+      background: #fff;
+      border-radius: 14px;
+      width: min(600px, 95vw);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .admin-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-protected="true">
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-title">📂 Administrador de Repositorio</div>
+      <div class="header-subtitle">Área de Cultura Digital — CECyTE</div>
+    </div>
+    <div class="header-links">
+      <span style="color: rgba(255,255,255,0.8); font-size: 0.8rem;">👤 <span id="currentUser">usuario</span></span>
+      <a href="#" onclick="logout(event)">🚪 Salir</a>
+      <a href="admin-noticias.html">🗂️ Noticias</a>
+      <a href="index.html" target="_blank">← Volver al sitio</a>
+    </div>
+  </div>
+</header>
+
+<div class="theme-swatch-bar" aria-label="Seleccionar tema">
+  <button class="theme-swatch" type="button" data-theme-preset="verde">
+    <span class="theme-swatch-title">Verde</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#1f4f25"></span>
+      <span class="theme-swatch-dot" style="background:#6a8b32"></span>
+      <span class="theme-swatch-dot" style="background:#f3f0ec"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="naranja">
+    <span class="theme-swatch-title">Naranja</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#b25c00"></span>
+      <span class="theme-swatch-dot" style="background:#c58c00"></span>
+      <span class="theme-swatch-dot" style="background:#fff7ee"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="azul">
+    <span class="theme-swatch-title">Azul</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#104a8c"></span>
+      <span class="theme-swatch-dot" style="background:#1da0c3"></span>
+      <span class="theme-swatch-dot" style="background:#f6fbff"></span>
+    </div>
+  </button>
+  <button class="theme-swatch" type="button" data-theme-preset="vino">
+    <span class="theme-swatch-title">Vino</span>
+    <div class="theme-swatch-palette">
+      <span class="theme-swatch-dot" style="background:#4f132f"></span>
+      <span class="theme-swatch-dot" style="background:#8b6e27"></span>
+      <span class="theme-swatch-dot" style="background:#f3f0ec"></span>
+    </div>
+  </button>
+</div>
+
+<!-- MAIN -->
+<main>
+  <div class="alert" id="alert"></div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Documentos Totales</div>
+      <div class="stat-value" id="totalDocs">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Última Actualización</div>
+      <div class="stat-value" id="lastUpdate" style="font-size: 1rem; color: var(--texto-suave); font-weight: 400;">Nunca</div>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="admin-grid">
+
+    <!-- FORM -->
+    <section class="form-section">
+      <h2>✎ Nuevo Documento</h2>
+      <form id="repoForm">
+        <input type="hidden" id="repoId" />
+
+        <div class="form-group">
+          <label for="repoName">Nombre del documento</label>
+          <input type="text" id="repoName" placeholder="Ej: Proyecto Transversal — Identidad Digital" required />
+        </div>
+
+        <div class="form-group">
+          <label for="repoMeta">Descripción / Meta</label>
+          <input type="text" id="repoMeta" placeholder="Ej: Proyectos Aula · abr 2025" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="repoCat">Categoría</label>
+            <select id="repoCat" required>
+              <option value="">— Seleccionar —</option>
+              <option value="proyecto">Proyectos Aula</option>
+              <option value="evaluacion">Evaluación</option>
+              <option value="multimedia">Multimedia</option>
+              <option value="laboratorio">Laboratorio</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="repoFileType">Tipo de archivo</label>
+            <select id="repoFileType" required onchange="updateFieldsForType(this.value)">
+              <option value="">— Seleccionar —</option>
+              <option value="PDF">PDF</option>
+              <option value="DOCX">DOCX</option>
+              <option value="PPTX">PPTX</option>
+              <option value="VIDEO">VIDEO</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="repoIcon">Ícono (emoji)</label>
+            <input type="text" id="repoIcon" placeholder="📁" value="📁" maxlength="2" required />
+          </div>
+          <div class="form-group">
+            <label for="repoDate">Fecha</label>
+            <input type="date" id="repoDate" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label id="urlFieldLabel" for="repoDriveUrl">URL del recurso</label>
+          <input type="url" id="repoDriveUrl" placeholder="https://drive.google.com/file/d/..." required />
+          <p class="url-hint" id="urlFieldHint">
+            Pega el enlace de compartir de Drive.<br>
+            Archivo: <code>drive.google.com/file/d/ID/view</code><br>
+            Carpeta: <code>drive.google.com/drive/folders/ID</code>
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submitBtn">➕ Agregar Documento</button>
+          <button type="reset" class="btn btn-secondary" id="resetBtn" onclick="resetForm()">Limpiar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- LIST -->
+    <section class="list-section">
+      <h2>📂 Documentos del Repositorio</h2>
+      <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem;">
+        <input id="repoSearch" placeholder="Buscar por nombre, categoría o tipo..." style="flex:1;padding:0.6rem;border:1px solid var(--gris-medio);border-radius:8px;" />
+        <button class="btn btn-secondary btn-sm" id="clearSearch">Limpiar</button>
+      </div>
+      <div class="repo-list" id="repoList">
+        <div class="empty-state">
+          <div class="empty-state-icon">📂</div>
+          <p>Cargando documentos…</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <div class="modal-header">⚠️ Eliminar Documento</div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas eliminar este documento?</p>
+      <p><strong id="deleteConfirmText"></strong></p>
+      <p style="color:var(--texto-suave);font-size:0.82rem;margin-top:0.5rem;">Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">🗑️ Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER DETALLE -->
+<div class="modal" id="detailModal">
+  <div class="modal-content detail-modal-content">
+    <div class="modal-header" id="detailModalTitle">Detalle</div>
+    <div class="modal-body" id="detailModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeDetailModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/default-repo.js"></script>
+<script src="auth.js"></script>
+<script>
+  function logout(event) {
+    event.preventDefault();
+    clearSession();
+    showAlert('✓ Sesión cerrada correctamente', 'exito');
+    setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+  }
+
+  const CAT_LABELS = { proyecto: 'Proyectos Aula', evaluacion: 'Evaluación', multimedia: 'Multimedia', laboratorio: 'Laboratorio' };
+  const BADGE_CLASS = { PDF: 'badge-pdf', DOCX: 'badge-word', PPTX: 'badge-slides', VIDEO: 'badge-video' };
+
+  let customRepo = [];
+  let allRepo = [];
+  let deleteTargetId = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateUserDisplay();
+    loadRepo();
+    setTodayDate();
+    document.getElementById('repoSearch').addEventListener('input', e => renderRepoList(e.target.value));
+    document.getElementById('clearSearch').addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('repoSearch').value = '';
+      renderRepoList();
+    });
+  });
+
+  function setTodayDate() {
+    document.getElementById('repoDate').value = new Date().toISOString().split('T')[0];
+  }
+
+  const URL_HINTS = {
+    video: {
+      label: 'URL del video (YouTube / Dailymotion)',
+      placeholder: 'https://www.youtube.com/watch?v=... o https://www.dailymotion.com/video/...',
+      hint: 'Pega el enlace del video.<br>YouTube: <code>youtube.com/watch?v=ID</code> o <code>youtu.be/ID</code><br>Dailymotion: <code>dailymotion.com/video/ID</code>'
+    },
+    drive: {
+      label: 'URL de Google Drive',
+      placeholder: 'https://drive.google.com/file/d/...',
+      hint: 'Pega el enlace de compartir de Drive.<br>Archivo: <code>drive.google.com/file/d/ID/view</code><br>Carpeta: <code>drive.google.com/drive/folders/ID</code>'
+    }
+  };
+
+  function updateFieldsForType(type) {
+    const config = type === 'VIDEO' ? URL_HINTS.video : URL_HINTS.drive;
+    document.getElementById('urlFieldLabel').textContent = config.label;
+    document.getElementById('repoDriveUrl').placeholder = config.placeholder;
+    document.getElementById('urlFieldHint').innerHTML = config.hint;
+    if (type === 'VIDEO') {
+      const iconField = document.getElementById('repoIcon');
+      if (iconField && !iconField.value.trim()) iconField.value = '🎬';
+    }
+  }
+
+  function toEmbedUrl(url, fileType) {
+    if (fileType === 'VIDEO') {
+      const ytWatch = url.match(/[?&]v=([^&\?\/#+]+)/);
+      if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
+      const ytShort = url.match(/youtu\.be\/([^?\/\s]+)/);
+      if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+      const dmMatch = url.match(/dailymotion\.com\/video\/([^_?\/#\s]+)/);
+      if (dmMatch) return `https://www.dailymotion.com/embed/video/${dmMatch[1]}`;
+      return url;
+    }
+    const fileMatch = url.match(/\/file\/d\/([^\/\?#]+)/);
+    if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
+    const folderMatch = url.match(/\/drive\/folders\/([^\/\?#]+)/);
+    if (folderMatch) return `https://drive.google.com/embeddedfolderview?id=${folderMatch[1]}#list`;
+    return url;
+  }
+
+  function toExternalUrl(url, fileType) {
+    if (fileType === 'VIDEO') return url;
+    const fileMatch = url.match(/\/file\/d\/([^\/\?#]+)/);
+    if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/view?usp=sharing`;
+    const folderMatch = url.match(/\/drive\/folders\/([^\/\?#]+)/);
+    if (folderMatch) return `https://drive.google.com/drive/folders/${folderMatch[1]}?usp=sharing`;
+    return url;
+  }
+
+  function loadRepo() {
+    const stored = localStorage.getItem('cecytes_repo');
+    customRepo = stored ? JSON.parse(stored) : [];
+    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenRepo') || '[]');
+    const visibleDefaults = DEFAULT_REPO.filter(item => {
+      const key = `${item.name}_${item.date}`;
+      return !hiddenDefaults.includes(key);
+    });
+    allRepo = [...visibleDefaults, ...customRepo].sort((a, b) => new Date(b.date) - new Date(a.date));
+    renderRepoList();
+    updateStats();
+  }
+
+  function saveRepo() {
+    localStorage.setItem('cecytes_repo', JSON.stringify(customRepo));
+    localStorage.setItem('cecytes_repoLastUpdate', new Date().toLocaleString());
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById('totalDocs').textContent = allRepo.length;
+    const last = localStorage.getItem('cecytes_repoLastUpdate');
+    document.getElementById('lastUpdate').textContent = last || 'Nunca';
+  }
+
+  function renderRepoList(query) {
+    const list = document.getElementById('repoList');
+    const q = (query || '').toString().trim().toLowerCase();
+    const items = q ? allRepo.filter(item =>
+      (item.name && item.name.toLowerCase().includes(q)) ||
+      (item.cat && CAT_LABELS[item.cat] && CAT_LABELS[item.cat].toLowerCase().includes(q)) ||
+      (item.fileType && item.fileType.toLowerCase().includes(q)) ||
+      (item.meta && item.meta.toLowerCase().includes(q))
+    ) : allRepo;
+
+    if (!items || items.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📂</div><p>No hay documentos que coincidan.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = items.map(item => {
+      const isDefault = item.isDefault;
+      const realIdx = allRepo.indexOf(item);
+      const bc = BADGE_CLASS[item.fileType] || 'badge-pdf';
+      const catLabel = CAT_LABELS[item.cat] || item.cat;
+      const defaultBadge = isDefault ? '<span class="badge badge-default">Por defecto</span>' : '';
+      const dateStr = item.date ? new Date(item.date).toLocaleDateString('es-MX') : '';
+      return `
+        <div class="repo-list-item">
+          <div class="repo-list-item-header">
+            <div class="repo-list-item-title">${item.icon || '📄'} ${item.name}</div>
+          </div>
+          <div class="repo-list-item-meta">📅 ${dateStr} · ${item.meta}</div>
+          <div class="repo-list-item-tags">
+            <span class="badge ${bc}">${item.fileType}</span>
+            <span class="badge badge-cat">${catLabel}</span>
+            ${defaultBadge}
+          </div>
+          <div class="repo-list-item-actions">
+            <button class="btn btn-sm btn-info" onclick="viewDoc(${realIdx})">👁 Ver</button>
+            ${isDefault ? '' : `<button class="btn btn-sm btn-secondary" onclick="editDoc(${realIdx})">✎ Editar</button>`}
+            <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${realIdx}, ${isDefault})">🗑️ Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('repoForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = document.getElementById('repoId').value;
+    const isEditing = id !== '';
+    const name = document.getElementById('repoName').value.trim();
+    const meta = document.getElementById('repoMeta').value.trim();
+    const cat = document.getElementById('repoCat').value;
+    const fileType = document.getElementById('repoFileType').value;
+    const icon = document.getElementById('repoIcon').value.trim() || '📁';
+    const date = document.getElementById('repoDate').value;
+    const rawUrl = document.getElementById('repoDriveUrl').value.trim();
+
+    const embedUrl = toEmbedUrl(rawUrl, fileType);
+    const externalUrl = toExternalUrl(rawUrl, fileType);
+
+    const docItem = { name, meta, cat, fileType, icon, date, embedUrl, externalUrl };
+
+    if (isEditing) {
+      allRepo[id] = { ...allRepo[id], ...docItem };
+      const idx = customRepo.findIndex(n => n.name === allRepo[id].name && n.date === allRepo[id].date);
+      if (idx >= 0) customRepo[idx] = { ...customRepo[idx], ...docItem };
+      showAlert('✓ Documento actualizado correctamente', 'exito');
+    } else {
+      const newItem = { ...docItem, isDefault: false };
+      customRepo.unshift(newItem);
+      allRepo.unshift(newItem);
+      showAlert('✓ Documento agregado correctamente', 'exito');
+    }
+
+    saveRepo();
+    renderRepoList();
+    resetForm();
+  });
+
+  function editDoc(idx) {
+    const item = allRepo[idx];
+    if (item.isDefault) {
+      showAlert('Los documentos por defecto no se pueden editar directamente. Elimínalo y crea uno nuevo personalizado.', 'info');
+      return;
+    }
+    document.getElementById('repoId').value = idx;
+    document.getElementById('repoName').value = item.name;
+    document.getElementById('repoMeta').value = item.meta;
+    document.getElementById('repoCat').value = item.cat;
+    document.getElementById('repoFileType').value = item.fileType;
+    updateFieldsForType(item.fileType);
+    document.getElementById('repoIcon').value = item.icon;
+    document.getElementById('repoDate').value = item.date;
+    document.getElementById('repoDriveUrl').value = item.externalUrl || item.embedUrl || '';
+    document.getElementById('submitBtn').textContent = '💾 Guardar Cambios';
+    document.querySelector('.form-section h2').textContent = '✎ Editar Documento';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function viewDoc(idx) {
+    const item = allRepo[idx];
+    const catLabel = CAT_LABELS[item.cat] || item.cat;
+    const dateStr = item.date ? new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Sin fecha';
+    document.getElementById('detailModalTitle').textContent = `${item.icon || '📄'} ${item.name}`;
+    document.getElementById('detailModalBody').innerHTML = `
+      <p><strong>Categoría:</strong> ${catLabel}</p>
+      <p><strong>Tipo:</strong> ${item.fileType}</p>
+      <p><strong>Meta:</strong> ${item.meta}</p>
+      <p><strong>Fecha:</strong> ${dateStr}</p>
+      <p style="margin-top:1rem;"><strong>URL del recurso:</strong><br>
+        <a href="${item.externalUrl || item.embedUrl}" target="_blank" style="color:var(--info);word-break:break-all;">${item.externalUrl || item.embedUrl}</a>
+      </p>
+    `;
+    document.getElementById('detailModal').classList.add('show');
+  }
+
+  function closeDetailModal() {
+    document.getElementById('detailModal').classList.remove('show');
+  }
+
+  function openDeleteModal(idx, isDefault) {
+    deleteTargetId = { idx, isDefault };
+    document.getElementById('deleteConfirmText').textContent = allRepo[idx].name;
+    document.getElementById('deleteModal').classList.add('show');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    deleteTargetId = null;
+  }
+
+  function confirmDelete() {
+    if (deleteTargetId !== null) {
+      const { idx, isDefault } = deleteTargetId;
+      const item = allRepo[idx];
+      if (isDefault) {
+        const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenRepo') || '[]');
+        const key = `${item.name}_${item.date}`;
+        if (!hiddenDefaults.includes(key)) {
+          hiddenDefaults.push(key);
+          localStorage.setItem('cecytes_hiddenRepo', JSON.stringify(hiddenDefaults));
+        }
+        showAlert('✓ Documento por defecto ocultado del repositorio', 'exito');
+      } else {
+        customRepo.splice(customRepo.findIndex(n => n.name === item.name && n.date === item.date), 1);
+        saveRepo();
+        showAlert('✓ Documento eliminado correctamente', 'exito');
+      }
+      loadRepo();
+      closeDeleteModal();
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('repoForm').reset();
+    document.getElementById('repoId').value = '';
+    document.getElementById('submitBtn').textContent = '➕ Agregar Documento';
+    document.querySelector('.form-section h2').textContent = '✎ Nuevo Documento';
+    updateFieldsForType('');
+    setTodayDate();
+  }
+
+  function showAlert(msg, type) {
+    const alert = document.getElementById('alert');
+    alert.textContent = msg;
+    alert.className = `alert ${type} show`;
+    setTimeout(() => alert.classList.remove('show'), 4000);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDeleteModal(); closeDetailModal(); }
+  });
+</script>
+<script src="assets/theme.js"></script>
+
+</body>
+</html>

@@ -1650,72 +1650,7 @@
       <button class="repo-tab" onclick="filterRepo(this,'multimedia')">Multimedia</button>
       <button class="repo-tab" onclick="filterRepo(this,'laboratorio')">Laboratorio</button>
     </div>
-    <div class="repo-items" id="repoItems">
-      <div class="repo-item" data-cat="proyecto">
-        <div class="repo-file-icon">📁</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Proyecto Transversal — Identidad Digital</div>
-          <div class="repo-item-meta">Parcial 1 · Actualizado: abr 2025</div>
-        </div>
-        <span class="repo-item-badge badge-word">DOCX</span>
-      </div>
-      <div class="repo-item" data-cat="evaluacion">
-        <div class="repo-file-icon">📊</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Banco de Reactivos — Unidad 1</div>
-          <div class="repo-item-meta">Evaluación · Actualizado: mar 2025</div>
-        </div>
-        <span class="repo-item-badge badge-pdf">PDF</span>
-      </div>
-      <div class="repo-item" data-cat="multimedia">
-        <div class="repo-file-icon">🎞️</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Presentación — Ciudadanía Digital</div>
-          <div class="repo-item-meta">Parcial 2 · Actualizado: may 2025</div>
-        </div>
-        <span class="repo-item-badge badge-slides">PPTX</span>
-      </div>
-      <div class="repo-item" data-cat="laboratorio">
-        <div class="repo-file-icon">🔬</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Guía de Práctica — Seguridad en Redes</div>
-          <div class="repo-item-meta">Cómputo · Actualizado: abr 2025</div>
-        </div>
-        <span class="repo-item-badge badge-pdf">PDF</span>
-      </div>
-      <div class="repo-item" data-cat="multimedia">
-        <div class="repo-file-icon">🎬</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Video: Introducción a la Privacidad Digital</div>
-          <div class="repo-item-meta">Multimedia · YouTube embed</div>
-        </div>
-        <span class="repo-item-badge badge-video">VIDEO</span>
-      </div>
-      <div class="repo-item" data-cat="evaluacion">
-        <div class="repo-file-icon">📋</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Rúbrica de Evaluación — Proyecto Final</div>
-          <div class="repo-item-meta">Evaluación · Actualizado: may 2025</div>
-        </div>
-        <span class="repo-item-badge badge-word">DOCX</span>
-      </div>
-      <div class="repo-item" data-cat="proyecto">
-        <div class="repo-file-icon">💡</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Infografía — Derechos Digitales</div>
-          <div class="repo-item-meta">Parcial 3 · PDF imprimible</div>
-        </div>
-        <span class="repo-item-badge badge-pdf">PDF</span>
-      </div>
-      <div class="repo-item" data-cat="laboratorio">
-        <div class="repo-file-icon">⚙️</div>
-        <div class="repo-item-info">
-          <div class="repo-item-name">Manual — Configuración de Google Workspace</div>
-          <div class="repo-item-meta">Laboratorio · Actualizado: ene 2025</div>
-        </div>
-        <span class="repo-item-badge badge-pdf">PDF</span>
-      </div>
-    </div>
+    <div class="repo-items" id="repoItems"></div>
   </div>
 </section>
 
@@ -1784,6 +1719,7 @@
 </footer>
 
 <script src="assets/default-news.js"></script>
+<script src="assets/default-repo.js"></script>
 <script>
   function toggleNav() {
     const toggle = document.getElementById('navToggle');
@@ -1938,6 +1874,43 @@
     track.style.transform = `translateX(-${carouselPos * cardWidth}px)`;
   }
 
+  // ── REPOSITORIO DINÁMICO ──
+  function loadRepo() {
+    const stored = localStorage.getItem('cecytes_repo');
+    const customRepo = stored ? JSON.parse(stored) : [];
+    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenRepo') || '[]');
+    const visibleDefaults = DEFAULT_REPO.filter(item => {
+      const key = `${item.name}_${item.date}`;
+      return !hiddenDefaults.includes(key);
+    });
+    const allItems = [...visibleDefaults, ...customRepo].sort((a, b) => new Date(b.date) - new Date(a.date));
+    renderRepoItems(allItems);
+  }
+
+  function renderRepoItems(items) {
+    const container = document.getElementById('repoItems');
+    const badgeClass = { PDF: 'badge-pdf', DOCX: 'badge-word', PPTX: 'badge-slides', VIDEO: 'badge-video' };
+    if (!items || items.length === 0) {
+      container.innerHTML = '<p style="color:var(--texto-suave);padding:2rem;text-align:center;grid-column:1/-1;">No hay documentos disponibles.</p>';
+      return;
+    }
+    container.innerHTML = items.map(item => {
+      const bc = badgeClass[item.fileType] || 'badge-pdf';
+      const safeTitle = (item.name || '').replace(/'/g, '&#39;');
+      const clickAttr = item.embedUrl
+        ? `onclick="openLinkModal('${item.embedUrl}','${safeTitle}','${item.externalUrl || item.embedUrl}')"`
+        : item.externalUrl ? `onclick="window.open('${item.externalUrl}','_blank')"` : '';
+      return `<div class="repo-item" data-cat="${item.cat}" ${clickAttr}>
+        <div class="repo-file-icon">${item.icon || '📄'}</div>
+        <div class="repo-item-info">
+          <div class="repo-item-name">${item.name}</div>
+          <div class="repo-item-meta">${item.meta}</div>
+        </div>
+        <span class="repo-item-badge ${bc}">${item.fileType}</span>
+      </div>`;
+    }).join('');
+  }
+
   // ── REPO FILTER ──
   function filterRepo(btn, cat) {
     document.querySelectorAll('.repo-tab').forEach(t => t.classList.remove('active'));
@@ -2025,7 +1998,7 @@
   });
 
   // ── INIT ──
-  document.addEventListener('DOMContentLoaded', loadNews);
+  document.addEventListener('DOMContentLoaded', () => { loadNews(); loadRepo(); });
 </script>
 
 <script src="assets/theme.js"></script>
