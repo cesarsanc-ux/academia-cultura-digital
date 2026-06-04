@@ -605,124 +605,156 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
 <script src="assets/default-news.js"></script>
 <script src="auth.js"></script>
 <script>
-  // Logout function
-  function logout(event) {
-    event.preventDefault();
-    clearSession();
-    showAlert('✓ Sesión cerrada correctamente', 'exito');
-    setTimeout(() => {
+  // ── GUARD DE AUTENTICACIÓN ──
+  auth.onAuthStateChanged(user => {
+    if (!user) {
       window.location.href = 'login.html';
-    }, 1000);
-  }
-
-  // STATE
-  let news = [];
-  let deleteTargetId = null;
-  let allNews = []; // Todas las noticias (guardadas + por defecto + marcadas para eliminar)
-
-  // INIT
-  document.addEventListener('DOMContentLoaded', () => {
+      return;
+    }
     updateUserDisplay();
     loadNews();
+  });
+
+  async function logout(event) {
+    event.preventDefault();
+    await auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  // ── ESTADO ──
+  let news = [];
+  let allNews = [];
+  let deleteTargetId = null;
+
+  // ── INIT DOM ──
+  document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
     const search = document.getElementById('newsSearch');
-    if (search) {
-      search.addEventListener('input', (e) => renderNews(e.target.value));
-    }
+    if (search) search.addEventListener('input', e => renderNews(e.target.value));
     const clearBtn = document.getElementById('clearSearch');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', (e) => { e.preventDefault(); if (search) { search.value=''; renderNews(); } });
-    }
+    if (clearBtn) clearBtn.addEventListener('click', e => { e.preventDefault(); if (search) { search.value = ''; renderNews(); } });
   });
 
   function setTodayDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('newsDate').value = today;
+    document.getElementById('newsDate').value = new Date().toISOString().split('T')[0];
   }
 
-  // LOAD FROM LOCALSTORAGE y MERGE con noticias por defecto
-  function loadNews() {
-    const stored = localStorage.getItem('cecytes_news');
-    const customNews = stored ? JSON.parse(stored) : [];
-    
-    // Obtener lista de noticias por defecto que están ocultas
-    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenDefaults') || '[]');
-    
-    // Combinar: noticias personalizadas + noticias por defecto (excepto las ocultas)
-    const visibleDefaults = DEFAULT_NEWS.filter(item => {
-      const key = `${item.title}_${item.date}`;
-      return !hiddenDefaults.includes(key);
-    });
-    
-    news = customNews;
-    allNews = [...visibleDefaults, ...customNews].sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    renderNews();
-    updateStats();
+  // ── CARGA DESDE FIRESTORE ──
+  async function loadNews() {
+    try {
+      const [snapshot, configDoc] = await Promise.all([
+        db.collection('noticias').orderBy('date', 'desc').get(),
+        db.collection('config').doc('noticias').get()
+      ]);
+
+      const customNews = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+      const hiddenDefaults = configDoc.exists ? (configDoc.data().hiddenDefaults || []) : [];
+
+      const visibleDefaults = DEFAULT_NEWS.filter(item => {
+        const key = `${item.title}_${item.date}`;
+        return !hiddenDefaults.includes(key);
+      });
+
+      news = customNews;
+      allNews = [...visibleDefaults, ...customNews].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      renderNews();
+      updateStats();
+    } catch (err) {
+      showAlert('Error cargando noticias: ' + err.message, 'error');
+    }
   }
 
-  // SAVE TO LOCALSTORAGE
-  function saveNews() {
-    localStorage.setItem('cecytes_news', JSON.stringify(news));
-    localStorage.setItem('cecytes_lastUpdate', new Date().toLocaleString());
-    updateStats();
+  // ── ESTADÍSTICAS ──
+  async function updateStats() {
+    document.getElementById('totalNews').textContent = allNews.length;
+    try {
+      const metaDoc = await db.collection('config').doc('meta').get();
+      document.getElementById('lastUpdate').textContent = metaDoc.exists ? (metaDoc.data().lastNewsUpdate || 'Nunca') : 'Nunca';
+    } catch {
+      document.getElementById('lastUpdate').textContent = '—';
+    }
+  }
+
+  async function saveLastUpdate() {
+    await db.collection('config').doc('meta').set({ lastNewsUpdate: new Date().toLocaleString('es-MX') }, { merge: true });
+  }
+
+  // ── ADJUNTOS (Firebase Storage con fallback a base64) ──
+  async function uploadAttachments() {
+    const files = Array.from(document.getElementById('newsAttachments').files || []);
+    if (files.length === 0) return [];
+
+    return Promise.all(files.map(async file => {
+      if (storage) {
+        try {
+          const ref = storage.ref(`adjuntos/noticias/${Date.now()}_${file.name}`);
+          await ref.put(file);
+          const url = await ref.getDownloadURL();
+          return { name: file.name, type: file.type, url };
+        } catch (e) {
+          console.warn('Storage no disponible, usando base64:', e.message);
+        }
+      }
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }));
   }
 
   function renderAttachmentBadges(attachments = []) {
     if (!attachments || attachments.length === 0) return '';
-    return `
-      <div class="news-attachments">
-        ${attachments.map(file => `<span class="attachment-badge">📎 ${file.name}</span>`).join('')}
-      </div>
-    `;
+    return `<div class="news-attachments">${attachments.map(f => `<span class="attachment-badge">📎 ${f.name}</span>`).join('')}</div>`;
   }
 
   function renderAttachmentsHtml(attachments = []) {
     if (!attachments || attachments.length === 0) return '';
+    const src = f => f.url || f.data || '';
     return `
       <div class="news-item-desc">
         <strong>Archivos adjuntos:</strong>
         <div class="news-attachments">
-          ${attachments.map(file => file.type.startsWith('image/') ? `
-            <a href="${file.data}" target="_blank" class="attachment-badge">📷 ${file.name}</a>
-            <img class="attachment-preview" src="${file.data}" alt="${file.name}" />
+          ${attachments.map(f => (f.type || '').startsWith('image/') ? `
+            <a href="${src(f)}" target="_blank" class="attachment-badge">📷 ${f.name}</a>
+            <img class="attachment-preview" src="${src(f)}" alt="${f.name}" />
           ` : `
-            <a href="${file.data}" target="_blank" download="${file.name}" class="attachment-badge">📎 ${file.name}</a>
+            <a href="${src(f)}" target="_blank" class="attachment-badge">📎 ${f.name}</a>
           `).join('')}
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
-  // RENDER LIST (with optional filter)
+  // ── RENDERIZADO ──
   function renderNews(query) {
     const list = document.getElementById('newsList');
     const q = (query || '').toString().trim().toLowerCase();
-    const items = q ? allNews.filter(item => {
-      return (item.title && item.title.toLowerCase().includes(q)) ||
-             (item.desc && item.desc.toLowerCase().includes(q)) ||
-             (item.detail && item.detail.toLowerCase().includes(q)) ||
-             (item.tag && item.tag.toLowerCase().includes(q));
-    }) : allNews;
+    const items = q ? allNews.filter(item =>
+      (item.title && item.title.toLowerCase().includes(q)) ||
+      (item.desc && item.desc.toLowerCase().includes(q)) ||
+      (item.detail && item.detail.toLowerCase().includes(q)) ||
+      (item.tag && item.tag.toLowerCase().includes(q))
+    ) : allNews;
 
     if (!items || items.length === 0) {
-      list.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">📋</div>
-          <p>No hay noticias que coincidan.</p>
-        </div>
-      `;
+      list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><p>No hay noticias que coincidan.</p></div>`;
       return;
     }
 
-    list.innerHTML = items.map((item, idx) => {
+    list.innerHTML = items.map(item => {
       const isDefault = item.isDefault;
       const realIdx = allNews.indexOf(item);
       const badge = isDefault ? '<span style="display:inline-block;background:var(--dorado-pale);color:var(--dorado);font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:0.5rem;">Por defecto</span>' : '';
-      
       return `
         <div class="news-item">
           <div class="news-item-header">
@@ -739,94 +771,56 @@
             ${isDefault ? '' : `<button class="btn btn-sm btn-secondary" onclick="editNews(${realIdx})">✎ Editar</button>`}
             <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${realIdx}, ${isDefault})">🗑️ Eliminar</button>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   }
 
-  // UPDATE STATS
-  function updateStats() {
-    document.getElementById('totalNews').textContent = allNews.length;
-    const last = localStorage.getItem('cecytes_lastUpdate');
-    document.getElementById('lastUpdate').textContent = last || 'Nunca';
-  }
-
-  async function readAttachments() {
-    const files = Array.from(document.getElementById('newsAttachments').files || []);
-    if (files.length === 0) return [];
-
-    return Promise.all(files.map(file => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
-      reader.onerror = () => reject(new Error('Error leyendo archivo: ' + file.name));
-      reader.readAsDataURL(file);
-    })));
-  }
-
-  // FORM SUBMIT
-  document.getElementById('newsForm').addEventListener('submit', async (e) => {
+  // ── FORMULARIO ──
+  document.getElementById('newsForm').addEventListener('submit', async e => {
     e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando…';
 
-    const id = document.getElementById('newsId').value;
-    const isEditing = id !== '';
-    const title = document.getElementById('newsTitle').value.trim();
-    const desc = document.getElementById('newsDesc').value.trim();
-    const detail = document.getElementById('newsDetail').value.trim();
-    const tag = document.getElementById('newsTag').value;
-    const icon = document.getElementById('newsIcon').value.trim() || '📋';
-    const date = document.getElementById('newsDate').value;
+    try {
+      const idx = document.getElementById('newsId').value;
+      const isEditing = idx !== '';
+      const title   = document.getElementById('newsTitle').value.trim();
+      const desc    = document.getElementById('newsDesc').value.trim();
+      const detail  = document.getElementById('newsDetail').value.trim();
+      const tag     = document.getElementById('newsTag').value;
+      const icon    = document.getElementById('newsIcon').value.trim() || '📋';
+      const date    = document.getElementById('newsDate').value;
 
-    if (desc.length > 150) {
-      showAlert('La descripción no debe exceder 150 caracteres', 'error');
-      return;
-    }
+      if (desc.length > 150) { showAlert('La descripción no debe exceder 150 caracteres', 'error'); return; }
 
-    const newAttachments = await readAttachments();
-    const existingAttachments = isEditing ? (allNews[id]?.attachments || []) : [];
-    const attachments = isEditing ? [...existingAttachments, ...newAttachments] : newAttachments;
+      const newAttachments = await uploadAttachments();
 
-    const newsItem = {
-      title,
-      desc,
-      detail,
-      tag,
-      icon,
-      date,
-      attachments
-    };
-
-    if (isEditing) {
-      allNews[id] = { ...allNews[id], ...newsItem };
-      // Si es una noticia personalizada, actualizar también en news array
-      const newsIdx = news.findIndex(n => n.title === allNews[id].title && n.date === allNews[id].date);
-      if (newsIdx >= 0) {
-        news[newsIdx] = { ...news[newsIdx], ...newsItem };
+      if (isEditing) {
+        const item = allNews[Number(idx)];
+        const attachments = [...(item.attachments || []), ...newAttachments];
+        await db.collection('noticias').doc(item.firestoreId).update({ title, desc, detail, tag, icon, date, attachments });
+        showAlert('✓ Noticia actualizada correctamente', 'exito');
+      } else {
+        await db.collection('noticias').add({ title, desc, detail, tag, icon, date, isDefault: false, attachments: newAttachments });
+        showAlert('✓ Noticia agregada correctamente', 'exito');
       }
-      showAlert('✓ Noticia actualizada correctamente', 'exito');
-    } else {
-      const newItem = { ...newsItem, isDefault: false };
-      news.unshift(newItem);
-      allNews.unshift(newItem);
-      showAlert('✓ Noticia agregada correctamente', 'exito');
-    }
 
-    saveNews();
-    renderNews();
-    document.getElementById('newsForm').reset();
-    document.getElementById('newsAttachments').value = '';
-    document.getElementById('newsId').value = '';
-    document.getElementById('submitBtn').textContent = '➕ Agregar Noticia';
-    document.querySelector('.form-section h2').textContent = '✎ Nueva Noticia';
-    setTodayDate();
+      await saveLastUpdate();
+      await loadNews();
+      resetForm();
+    } catch (err) {
+      showAlert('Error al guardar: ' + err.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '➕ Agregar Noticia';
+    }
   });
 
-  // EDIT NEWS
+  // ── EDITAR ──
   function editNews(idx) {
     const item = allNews[idx];
-    if (item.isDefault) {
-      showAlert('Las noticias por defecto no se pueden editar. Elimina esta y crea una nueva personalizada.', 'info');
-      return;
-    }
+    if (item.isDefault) { showAlert('Las noticias por defecto no se pueden editar. Elimínala y crea una nueva.', 'info'); return; }
     document.getElementById('newsId').value = idx;
     document.getElementById('newsTitle').value = item.title;
     document.getElementById('newsDesc').value = item.desc;
@@ -841,36 +835,28 @@
 
   function viewNews(idx) {
     const item = allNews[idx];
-    const title = `${item.icon} ${item.title}`;
     const date = new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
-    const detailText = item.detail || item.desc;
-
-    document.getElementById('detailModalTitle').textContent = title;
+    const detail = item.detail || item.desc;
+    document.getElementById('detailModalTitle').textContent = `${item.icon} ${item.title}`;
     document.getElementById('detailModalBody').innerHTML = `
       <p><strong>Categoría:</strong> ${item.tag}</p>
       <p><strong>Fecha:</strong> ${date}</p>
       <div class="news-item-desc"><strong>Descripción breve:</strong><br>${item.desc}</div>
-      <div class="news-item-desc" style="margin-top: 1rem;"><strong>Información completa:</strong><br>${detailText.replace(/\n/g, '<br>')}</div>
-      ${renderAttachmentsHtml(item.attachments)}
-    `;
-
+      <div class="news-item-desc" style="margin-top:1rem;"><strong>Información completa:</strong><br>${detail.replace(/\n/g, '<br>')}</div>
+      ${renderAttachmentsHtml(item.attachments)}`;
     document.getElementById('detailModal').classList.add('show');
   }
 
-  function viewNewsById(idx) {
-    // simple wrapper to keep render mappings stable
-    viewNews(idx);
-  }
+  function viewNewsById(idx) { viewNews(idx); }
 
   function closeDetailModal() {
     document.getElementById('detailModal').classList.remove('show');
   }
 
-  // DELETE
+  // ── ELIMINAR ──
   function openDeleteModal(idx, isDefault) {
     deleteTargetId = { idx, isDefault };
-    const title = allNews[idx].title;
-    document.getElementById('deleteConfirmText').textContent = title;
+    document.getElementById('deleteConfirmText').textContent = allNews[idx].title;
     document.getElementById('deleteModal').classList.add('show');
   }
 
@@ -879,34 +865,30 @@
     deleteTargetId = null;
   }
 
-  function confirmDelete() {
-    if (deleteTargetId !== null) {
-      const { idx, isDefault } = deleteTargetId;
-      const item = allNews[idx];
-      
+  async function confirmDelete() {
+    if (deleteTargetId === null) return;
+    const { idx, isDefault } = deleteTargetId;
+    const item = allNews[idx];
+    try {
       if (isDefault) {
-        // Guardar en lista de noticias por defecto ocultas
-        const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenDefaults') || '[]');
+        const configDoc = await db.collection('config').doc('noticias').get();
+        const hiddenDefaults = configDoc.exists ? (configDoc.data().hiddenDefaults || []) : [];
         const key = `${item.title}_${item.date}`;
-        if (!hiddenDefaults.includes(key)) {
-          hiddenDefaults.push(key);
-          localStorage.setItem('cecytes_hiddenDefaults', JSON.stringify(hiddenDefaults));
-        }
-        showAlert('✓ Noticia por defecto oculta (puedes restaurarla eliminando la marca en el código)', 'exito');
+        if (!hiddenDefaults.includes(key)) hiddenDefaults.push(key);
+        await db.collection('config').doc('noticias').set({ hiddenDefaults }, { merge: true });
+        showAlert('✓ Noticia por defecto ocultada', 'exito');
       } else {
-        // Eliminar de noticias personalizadas
-        news.splice(news.findIndex(n => n.title === item.title && n.date === item.date), 1);
-        saveNews();
+        await db.collection('noticias').doc(item.firestoreId).delete();
         showAlert('✓ Noticia eliminada correctamente', 'exito');
       }
-      
-      loadNews(); // Recargar todas las noticias
+      await loadNews();
       closeDeleteModal();
+    } catch (err) {
+      showAlert('Error al eliminar: ' + err.message, 'error');
     }
   }
 
-  // RESET FORM
-  // RESET FORM
+  // ── RESET ──
   function resetForm() {
     document.getElementById('newsForm').reset();
     document.getElementById('newsAttachments').value = '';
@@ -916,7 +898,7 @@
     setTodayDate();
   }
 
-  // ALERTS
+  // ── ALERTAS ──
   function showAlert(msg, type) {
     const alert = document.getElementById('alert');
     alert.textContent = msg;
@@ -924,12 +906,8 @@
     setTimeout(() => alert.classList.remove('show'), 4000);
   }
 
-  // CLOSE MODAL ON ESCAPE
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeDeleteModal();
-      closeDetailModal();
-    }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDeleteModal(); closeDetailModal(); }
   });
 </script>
 <script src="assets/theme.js"></script>

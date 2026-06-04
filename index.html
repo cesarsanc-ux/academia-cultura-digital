@@ -1732,9 +1732,15 @@
   </div>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
 <script src="assets/default-news.js"></script>
 <script src="assets/default-repo.js"></script>
 <script>
+  // ── ESTADO GLOBAL (se llena al cargar desde Firestore) ──
+  let allNewsItems = [];
+  let allRepoItems = [];
   function toggleNav() {
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
@@ -1751,44 +1757,43 @@
     if (!nav.contains(e.target)) closeNav();
   });
 
-  // ── LOAD NEWS FROM LOCALSTORAGE ──
-  function loadNews() {
-    const stored = localStorage.getItem('cecytes_news');
-    const storedNews = stored ? JSON.parse(stored) : [];
-    const news = mergeNews(storedNews, getDefaultNews());
-    renderNewsCarousel(news);
+  // ── CARGA NOTICIAS DESDE FIRESTORE ──
+  async function loadNews() {
+    try {
+      const [snapshot, configDoc] = await Promise.all([
+        db.collection('noticias').orderBy('date', 'desc').get(),
+        db.collection('config').doc('noticias').get()
+      ]);
+
+      const customNews = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+      const hiddenDefaults = configDoc.exists ? (configDoc.data().hiddenDefaults || []) : [];
+
+      allNewsItems = mergeNews(customNews, DEFAULT_NEWS || [], hiddenDefaults);
+      renderNewsCarousel(allNewsItems);
+    } catch (err) {
+      // Si Firestore falla, mostrar solo los defaults
+      allNewsItems = mergeNews([], DEFAULT_NEWS || [], []);
+      renderNewsCarousel(allNewsItems);
+    }
   }
 
-  function mergeNews(primary, fallback) {
+  function mergeNews(primary, fallback, hiddenDefaults) {
     const seen = new Set();
     const merged = [];
-    
-    // Obtener lista de noticias por defecto que están ocultas
-    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenDefaults') || '[]');
 
     primary.forEach(item => {
       const key = `${item.title}_${item.date}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        merged.push(item);
-      }
+      if (!seen.has(key)) { seen.add(key); merged.push(item); }
     });
-    
+
     fallback.forEach(item => {
       const key = `${item.title}_${item.date}`;
-      // No añadir si está en la lista de ocultas
-      if (!seen.has(key) && !hiddenDefaults.includes(key)) {
-        seen.add(key);
-        merged.push(item);
+      if (!seen.has(key) && !(hiddenDefaults || []).includes(key)) {
+        seen.add(key); merged.push(item);
       }
     });
 
-    return merged;
-  }
-
-  function getDefaultNews() {
-    // Usar noticias por defecto sincronizadas desde assets/default-news.js
-    return DEFAULT_NEWS || [];
+    return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
   }
 
   function renderNewsCarousel(news) {
@@ -1832,11 +1837,8 @@
 
   function showAllNews(event) {
     event.preventDefault();
-    const stored = localStorage.getItem('cecytes_news');
-    const storedNews = stored ? JSON.parse(stored) : [];
-    const news = mergeNews(storedNews, getDefaultNews());
     const container = document.getElementById('newsListContainer');
-    container.innerHTML = news.map((item, idx) => `
+    container.innerHTML = allNewsItems.map((item, idx) => `
       <div class="news-list-card" onclick="viewNews(${idx})">
         <h4>${item.icon} ${item.title}</h4>
         <p>${item.desc}</p>
@@ -1852,10 +1854,7 @@
   }
 
   function viewNews(idx) {
-    const stored = localStorage.getItem('cecytes_news');
-    const storedNews = stored ? JSON.parse(stored) : [];
-    const news = mergeNews(storedNews, getDefaultNews());
-    const item = news[idx];
+    const item = allNewsItems[idx];
     if (!item) return;
 
     const date = new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1888,17 +1887,29 @@
     track.style.transform = `translateX(-${carouselPos * cardWidth}px)`;
   }
 
-  // ── REPOSITORIO DINÁMICO ──
-  function loadRepo() {
-    const stored = localStorage.getItem('cecytes_repo');
-    const customRepo = stored ? JSON.parse(stored) : [];
-    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenRepo') || '[]');
-    const visibleDefaults = DEFAULT_REPO.filter(item => {
-      const key = `${item.name}_${item.date}`;
-      return !hiddenDefaults.includes(key);
-    });
-    const allItems = [...visibleDefaults, ...customRepo].sort((a, b) => new Date(b.date) - new Date(a.date));
-    renderRepoItems(allItems);
+  // ── REPOSITORIO DESDE FIRESTORE ──
+  async function loadRepo() {
+    try {
+      const [snapshot, configDoc] = await Promise.all([
+        db.collection('repositorio').orderBy('date', 'desc').get(),
+        db.collection('config').doc('repositorio').get()
+      ]);
+
+      const customRepo = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+      const hiddenDefaults = configDoc.exists ? (configDoc.data().hiddenRepo || []) : [];
+
+      const visibleDefaults = (DEFAULT_REPO || []).filter(item => {
+        const key = `${item.name}_${item.date}`;
+        return !hiddenDefaults.includes(key);
+      });
+
+      allRepoItems = [...visibleDefaults, ...customRepo].sort((a, b) => new Date(b.date) - new Date(a.date));
+      renderRepoItems(allRepoItems);
+    } catch (err) {
+      // Si Firestore falla, mostrar solo los defaults
+      allRepoItems = [...(DEFAULT_REPO || [])];
+      renderRepoItems(allRepoItems);
+    }
   }
 
   function renderRepoItems(items) {

@@ -489,14 +489,27 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
 <script src="assets/default-repo.js"></script>
 <script src="auth.js"></script>
 <script>
-  function logout(event) {
+  // ── GUARD DE AUTENTICACIÓN ──
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+    updateUserDisplay();
+    loadRepo();
+  });
+
+  async function logout(event) {
     event.preventDefault();
-    clearSession();
-    showAlert('✓ Sesión cerrada correctamente', 'exito');
-    setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+    await auth.signOut();
+    window.location.href = 'login.html';
   }
 
   const CAT_LABELS = { proyecto: 'Proyectos Aula', evaluacion: 'Evaluación', multimedia: 'Multimedia', laboratorio: 'Laboratorio' };
@@ -507,8 +520,6 @@
   let deleteTargetId = null;
 
   document.addEventListener('DOMContentLoaded', () => {
-    updateUserDisplay();
-    loadRepo();
     setTodayDate();
     document.getElementById('repoSearch').addEventListener('input', e => renderRepoList(e.target.value));
     document.getElementById('clearSearch').addEventListener('click', e => {
@@ -572,31 +583,48 @@
     return url;
   }
 
-  function loadRepo() {
-    const stored = localStorage.getItem('cecytes_repo');
-    customRepo = stored ? JSON.parse(stored) : [];
-    const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenRepo') || '[]');
-    const visibleDefaults = DEFAULT_REPO.filter(item => {
-      const key = `${item.name}_${item.date}`;
-      return !hiddenDefaults.includes(key);
-    });
-    allRepo = [...visibleDefaults, ...customRepo].sort((a, b) => new Date(b.date) - new Date(a.date));
-    renderRepoList();
-    updateStats();
+  // ── CARGA DESDE FIRESTORE ──
+  async function loadRepo() {
+    try {
+      const [snapshot, configDoc] = await Promise.all([
+        db.collection('repositorio').orderBy('date', 'desc').get(),
+        db.collection('config').doc('repositorio').get()
+      ]);
+
+      const customDocs = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+      const hiddenDefaults = configDoc.exists ? (configDoc.data().hiddenRepo || []) : [];
+
+      const visibleDefaults = DEFAULT_REPO.filter(item => {
+        const key = `${item.name}_${item.date}`;
+        return !hiddenDefaults.includes(key);
+      });
+
+      customRepo = customDocs;
+      allRepo = [...visibleDefaults, ...customDocs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      renderRepoList();
+      updateStats();
+    } catch (err) {
+      showAlert('Error cargando repositorio: ' + err.message, 'error');
+    }
   }
 
-  function saveRepo() {
-    localStorage.setItem('cecytes_repo', JSON.stringify(customRepo));
-    localStorage.setItem('cecytes_repoLastUpdate', new Date().toLocaleString());
-    updateStats();
-  }
-
-  function updateStats() {
+  // ── ESTADÍSTICAS ──
+  async function updateStats() {
     document.getElementById('totalDocs').textContent = allRepo.length;
-    const last = localStorage.getItem('cecytes_repoLastUpdate');
-    document.getElementById('lastUpdate').textContent = last || 'Nunca';
+    try {
+      const metaDoc = await db.collection('config').doc('meta').get();
+      document.getElementById('lastUpdate').textContent = metaDoc.exists ? (metaDoc.data().lastRepoUpdate || 'Nunca') : 'Nunca';
+    } catch {
+      document.getElementById('lastUpdate').textContent = '—';
+    }
   }
 
+  async function saveLastUpdate() {
+    await db.collection('config').doc('meta').set({ lastRepoUpdate: new Date().toLocaleString('es-MX') }, { merge: true });
+  }
+
+  // ── RENDERIZADO ──
   function renderRepoList(query) {
     const list = document.getElementById('repoList');
     const q = (query || '').toString().trim().toLowerCase();
@@ -635,51 +663,56 @@
             ${isDefault ? '' : `<button class="btn btn-sm btn-secondary" onclick="editDoc(${realIdx})">✎ Editar</button>`}
             <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${realIdx}, ${isDefault})">🗑️ Eliminar</button>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   }
 
-  document.getElementById('repoForm').addEventListener('submit', e => {
+  // ── FORMULARIO ──
+  document.getElementById('repoForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const id = document.getElementById('repoId').value;
-    const isEditing = id !== '';
-    const name = document.getElementById('repoName').value.trim();
-    const meta = document.getElementById('repoMeta').value.trim();
-    const cat = document.getElementById('repoCat').value;
-    const fileType = document.getElementById('repoFileType').value;
-    const icon = document.getElementById('repoIcon').value.trim() || '📁';
-    const date = document.getElementById('repoDate').value;
-    const rawUrl = document.getElementById('repoDriveUrl').value.trim();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando…';
 
-    const embedUrl = toEmbedUrl(rawUrl, fileType);
-    const externalUrl = toExternalUrl(rawUrl, fileType);
+    try {
+      const idx = document.getElementById('repoId').value;
+      const isEditing = idx !== '';
+      const name     = document.getElementById('repoName').value.trim();
+      const meta     = document.getElementById('repoMeta').value.trim();
+      const cat      = document.getElementById('repoCat').value;
+      const fileType = document.getElementById('repoFileType').value;
+      const icon     = document.getElementById('repoIcon').value.trim() || '📁';
+      const date     = document.getElementById('repoDate').value;
+      const rawUrl   = document.getElementById('repoDriveUrl').value.trim();
 
-    const docItem = { name, meta, cat, fileType, icon, date, embedUrl, externalUrl };
+      const embedUrl    = toEmbedUrl(rawUrl, fileType);
+      const externalUrl = toExternalUrl(rawUrl, fileType);
+      const docItem     = { name, meta, cat, fileType, icon, date, embedUrl, externalUrl };
 
-    if (isEditing) {
-      allRepo[id] = { ...allRepo[id], ...docItem };
-      const idx = customRepo.findIndex(n => n.name === allRepo[id].name && n.date === allRepo[id].date);
-      if (idx >= 0) customRepo[idx] = { ...customRepo[idx], ...docItem };
-      showAlert('✓ Documento actualizado correctamente', 'exito');
-    } else {
-      const newItem = { ...docItem, isDefault: false };
-      customRepo.unshift(newItem);
-      allRepo.unshift(newItem);
-      showAlert('✓ Documento agregado correctamente', 'exito');
+      if (isEditing) {
+        const item = allRepo[Number(idx)];
+        await db.collection('repositorio').doc(item.firestoreId).update(docItem);
+        showAlert('✓ Documento actualizado correctamente', 'exito');
+      } else {
+        await db.collection('repositorio').add({ ...docItem, isDefault: false });
+        showAlert('✓ Documento agregado correctamente', 'exito');
+      }
+
+      await saveLastUpdate();
+      await loadRepo();
+      resetForm();
+    } catch (err) {
+      showAlert('Error al guardar: ' + err.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '➕ Agregar Documento';
     }
-
-    saveRepo();
-    renderRepoList();
-    resetForm();
   });
 
+  // ── EDITAR ──
   function editDoc(idx) {
     const item = allRepo[idx];
-    if (item.isDefault) {
-      showAlert('Los documentos por defecto no se pueden editar directamente. Elimínalo y crea uno nuevo personalizado.', 'info');
-      return;
-    }
+    if (item.isDefault) { showAlert('Los documentos por defecto no se pueden editar. Elimínalo y crea uno nuevo.', 'info'); return; }
     document.getElementById('repoId').value = idx;
     document.getElementById('repoName').value = item.name;
     document.getElementById('repoMeta').value = item.meta;
@@ -706,15 +739,13 @@
       <p><strong>Fecha:</strong> ${dateStr}</p>
       <p style="margin-top:1rem;"><strong>URL del recurso:</strong><br>
         <a href="${item.externalUrl || item.embedUrl}" target="_blank" style="color:var(--info);word-break:break-all;">${item.externalUrl || item.embedUrl}</a>
-      </p>
-    `;
+      </p>`;
     document.getElementById('detailModal').classList.add('show');
   }
 
-  function closeDetailModal() {
-    document.getElementById('detailModal').classList.remove('show');
-  }
+  function closeDetailModal() { document.getElementById('detailModal').classList.remove('show'); }
 
+  // ── ELIMINAR ──
   function openDeleteModal(idx, isDefault) {
     deleteTargetId = { idx, isDefault };
     document.getElementById('deleteConfirmText').textContent = allRepo[idx].name;
@@ -726,28 +757,30 @@
     deleteTargetId = null;
   }
 
-  function confirmDelete() {
-    if (deleteTargetId !== null) {
-      const { idx, isDefault } = deleteTargetId;
-      const item = allRepo[idx];
+  async function confirmDelete() {
+    if (deleteTargetId === null) return;
+    const { idx, isDefault } = deleteTargetId;
+    const item = allRepo[idx];
+    try {
       if (isDefault) {
-        const hiddenDefaults = JSON.parse(localStorage.getItem('cecytes_hiddenRepo') || '[]');
+        const configDoc = await db.collection('config').doc('repositorio').get();
+        const hiddenDefaults = configDoc.exists ? (configDoc.data().hiddenRepo || []) : [];
         const key = `${item.name}_${item.date}`;
-        if (!hiddenDefaults.includes(key)) {
-          hiddenDefaults.push(key);
-          localStorage.setItem('cecytes_hiddenRepo', JSON.stringify(hiddenDefaults));
-        }
+        if (!hiddenDefaults.includes(key)) hiddenDefaults.push(key);
+        await db.collection('config').doc('repositorio').set({ hiddenRepo: hiddenDefaults }, { merge: true });
         showAlert('✓ Documento por defecto ocultado del repositorio', 'exito');
       } else {
-        customRepo.splice(customRepo.findIndex(n => n.name === item.name && n.date === item.date), 1);
-        saveRepo();
+        await db.collection('repositorio').doc(item.firestoreId).delete();
         showAlert('✓ Documento eliminado correctamente', 'exito');
       }
-      loadRepo();
+      await loadRepo();
       closeDeleteModal();
+    } catch (err) {
+      showAlert('Error al eliminar: ' + err.message, 'error');
     }
   }
 
+  // ── RESET ──
   function resetForm() {
     document.getElementById('repoForm').reset();
     document.getElementById('repoId').value = '';
@@ -757,6 +790,7 @@
     setTodayDate();
   }
 
+  // ── ALERTAS ──
   function showAlert(msg, type) {
     const alert = document.getElementById('alert');
     alert.textContent = msg;

@@ -1,17 +1,14 @@
-// Funciones de autenticación básicas
-
 function updateUserDisplay() {
   const userSpan = document.getElementById('currentUser');
-  if (userSpan) {
-    userSpan.textContent = localStorage.getItem('cecytes_user') || 'usuario';
-  }
+  if (!userSpan) return;
+  const user = auth.currentUser;
+  userSpan.textContent = user ? (user.displayName || user.email || 'Admin') : 'usuario';
 }
 
-function clearSession() {
-  localStorage.removeItem('cecytes_session');
-  localStorage.removeItem('cecytes_user');
+async function clearSession() {
+  await auth.signOut();
 }
 
 function getSession() {
-  return localStorage.getItem('cecytes_session');
+  return auth.currentUser;
 }
