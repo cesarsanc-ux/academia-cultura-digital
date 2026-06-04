@@ -1669,10 +1669,22 @@
     <div class="link-modal-iframe-wrap" id="linkModalIframeWrap">
       <iframe id="linkModalIframe" src="" title="Recurso de Academia" allowfullscreen></iframe>
       <div class="link-modal-fallback" id="linkModalFallback">
-        <span style="font-size:3rem">🔒</span>
-        <p>Este recurso no permite mostrarse en un marco integrado.<br>Puedes abrirlo directamente en una nueva pestaña.</p>
-        <a id="linkModalFallbackBtn" href="#" target="_blank" class="open-ext-btn">↗ Abrir en nueva pestaña</a>
-      </div>
+  <span style="font-size:3rem">📱</span>
+
+  <p>
+    Tu navegador o dispositivo no es compatible con la visualización integrada
+    de este recurso.
+    <br><br>
+    Utiliza el botón inferior para abrirlo directamente.
+  </p>
+
+  <a id="linkModalFallbackBtn"
+     href="#"
+     target="_blank"
+     class="open-ext-btn">
+    ↗ Abrir recurso directamente
+  </a>
+</div>
     </div>
   </div>
 </div>
@@ -1942,44 +1954,74 @@
   });
 
   // ── MODAL ENLACE ACADEMIA ──
-  function openLinkModal(embedUrl, titulo, externalUrl) {
-    const modal = document.getElementById('linkModal');
-    const iframe = document.getElementById('linkModalIframe');
-    const extBtn = document.getElementById('linkModalExtBtn');
-    const fallbackEl = document.getElementById('linkModalFallback');
-    const fallbackBtn = document.getElementById('linkModalFallbackBtn');
-    const titleEl = document.getElementById('linkModalTitle');
+  function isMobile() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(
+    navigator.userAgent
+  );
+}
 
-    const ext = externalUrl || embedUrl;
-    titleEl.textContent = titulo;
-    extBtn.href = ext;
-    fallbackBtn.href = ext;
-    fallbackEl.style.display = 'none';
-    iframe.style.display = 'block';
+function openLinkModal(embedUrl, titulo, externalUrl) {
+
+  const ext = externalUrl || embedUrl;
+
+  // En móviles abrir directamente
+  if (isMobile()) {
+
+    const abrir = confirm(
+      'Este recurso puede no visualizarse correctamente dentro del navegador móvil.\n\n¿Deseas abrirlo directamente?'
+    );
+
+    if (abrir) {
+      window.open(ext, '_blank');
+    }
+
+    return;
+  }
+
+  const modal = document.getElementById('linkModal');
+  const iframe = document.getElementById('linkModalIframe');
+  const extBtn = document.getElementById('linkModalExtBtn');
+  const fallbackEl = document.getElementById('linkModalFallback');
+  const fallbackBtn = document.getElementById('linkModalFallbackBtn');
+  const titleEl = document.getElementById('linkModalTitle');
+
+  titleEl.textContent = titulo;
+
+  extBtn.href = ext;
+  fallbackBtn.href = ext;
+
+  fallbackEl.style.display = 'none';
+  iframe.style.display = 'block';
+
+  iframe.src = '';
+
+  setTimeout(() => {
+
     iframe.src = embedUrl;
 
+    const fallbackTimer = setTimeout(() => {
+
+      fallbackEl.style.display = 'flex';
+      iframe.style.display = 'none';
+
+    }, 10000);
+
+    iframe.onload = function() {
+      clearTimeout(fallbackTimer);
+    };
+
     iframe.onerror = function() {
+      clearTimeout(fallbackTimer);
+
       iframe.style.display = 'none';
       fallbackEl.style.display = 'flex';
     };
 
-    const fallbackTimer = setTimeout(function() {
-      try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!doc || doc.body.innerHTML === '') {
-          iframe.style.display = 'none';
-          fallbackEl.style.display = 'flex';
-        }
-      } catch(e) {
-        // cross-origin cargado correctamente, no hacer nada
-      }
-    }, 5000);
+  }, 100);
 
-    iframe.onload = function() { clearTimeout(fallbackTimer); };
-
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-  }
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
 
   function closeLinkModal() {
     const modal = document.getElementById('linkModal');
