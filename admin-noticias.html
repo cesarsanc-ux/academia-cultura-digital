@@ -399,6 +399,22 @@
       color: var(--guinda);
     }
 
+    .icon-btn {
+      background: var(--gris-claro);
+      border: 1px solid var(--gris-medio);
+      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { background: var(--dorado-pale); border-color: var(--dorado); }
+    .icon-btn.active { background: var(--dorado-pale); border-color: var(--dorado); box-shadow: 0 0 0 2px var(--dorado); }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .admin-grid { grid-template-columns: 1fr; }
@@ -510,6 +526,7 @@
           <div class="form-group">
             <label for="newsIcon">Emoji/Icono</label>
             <input type="text" id="newsIcon" placeholder="📋" value="📋" maxlength="2" required />
+            <div id="newsIconPicker" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
           </div>
         </div>
 
@@ -633,9 +650,51 @@
   let allNews = [];
   let deleteTargetId = null;
 
+  const NEWS_ICONS = {
+    'Academia':     ['🎓','📚','🏫','✏️','📖','🧑‍🏫'],
+    'Calendario':   ['📅','🗓️','⏰','📆','🗒️','⌛'],
+    'Formatos':     ['📋','📄','📝','🗂️','📑','🗒️'],
+    'Capacitación': ['💡','🧠','📊','🎯','🔧','🛠️'],
+    'Plataformas':  ['💻','🖥️','📱','🌐','🔗','⚙️'],
+    'Anuncio':      ['📢','📣','🔔','⚠️','✅','🏛️'],
+    '':             ['📋','📢','🎓','📅','💡','🔔']
+  };
+
+  const NEWS_ICON_DEFAULT = {
+    'Academia': '🎓', 'Calendario': '📅', 'Formatos': '📋',
+    'Capacitación': '💡', 'Plataformas': '💻', 'Anuncio': '📢', '': '📋'
+  };
+
+  function renderNewsIconPicker(selected) {
+    const tag = document.getElementById('newsTag').value;
+    const picker = document.getElementById('newsIconPicker');
+    const icons = NEWS_ICONS[tag] || NEWS_ICONS[''];
+    picker.innerHTML = icons.map(icon => `
+      <button type="button" class="icon-btn ${icon === selected ? 'active' : ''}"
+        onclick="selectNewsIcon('${icon}')" title="${icon}">${icon}</button>
+    `).join('');
+  }
+
+  function selectNewsIcon(icon) {
+    document.getElementById('newsIcon').value = icon;
+    renderNewsIconPicker(icon);
+  }
+
   // ── INIT DOM ──
   document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
+    renderNewsIconPicker('📋');
+
+    document.getElementById('newsTag').addEventListener('change', e => {
+      const defaultIcon = NEWS_ICON_DEFAULT[e.target.value] || '📋';
+      document.getElementById('newsIcon').value = defaultIcon;
+      renderNewsIconPicker(defaultIcon);
+    });
+
+    document.getElementById('newsIcon').addEventListener('input', e => {
+      renderNewsIconPicker(e.target.value);
+    });
+
     const search = document.getElementById('newsSearch');
     if (search) search.addEventListener('input', e => renderNews(e.target.value));
     const clearBtn = document.getElementById('clearSearch');
@@ -826,6 +885,7 @@
     document.getElementById('newsDetail').value = item.detail || item.desc;
     document.getElementById('newsTag').value = item.tag;
     document.getElementById('newsIcon').value = item.icon;
+    renderNewsIconPicker(item.icon);
     document.getElementById('newsDate').value = item.date;
     document.getElementById('submitBtn').textContent = '💾 Guardar Cambios';
     document.querySelector('.form-section h2').textContent = '✎ Editar Noticia';
@@ -892,8 +952,10 @@
     document.getElementById('newsForm').reset();
     document.getElementById('newsAttachments').value = '';
     document.getElementById('newsId').value = '';
+    document.getElementById('newsIcon').value = '📋';
     document.getElementById('submitBtn').textContent = '➕ Agregar Noticia';
     document.querySelector('.form-section h2').textContent = '✎ Nueva Noticia';
+    renderNewsIconPicker('📋');
     setTodayDate();
   }
 

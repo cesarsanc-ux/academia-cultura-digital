@@ -298,6 +298,22 @@
       overflow: hidden;
     }
 
+    .icon-btn {
+      background: var(--gris-claro);
+      border: 1px solid var(--gris-medio);
+      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { background: var(--dorado-pale); border-color: var(--dorado); }
+    .icon-btn.active { background: var(--dorado-pale); border-color: var(--dorado); box-shadow: 0 0 0 2px var(--dorado); }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .admin-grid { grid-template-columns: 1fr; }
@@ -420,6 +436,7 @@
           <div class="form-group">
             <label for="repoIcon">Ícono (emoji)</label>
             <input type="text" id="repoIcon" placeholder="📁" value="📁" maxlength="2" required />
+            <div id="iconPicker" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
           </div>
           <div class="form-group">
             <label for="repoDate">Fecha</label>
@@ -521,6 +538,11 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
+    renderIconPicker('', '📁');
+    document.getElementById('repoIcon').addEventListener('input', e => {
+      const type = document.getElementById('repoFileType').value;
+      renderIconPicker(type, e.target.value);
+    });
     document.getElementById('repoSearch').addEventListener('input', e => renderRepoList(e.target.value));
     document.getElementById('clearSearch').addEventListener('click', e => {
       e.preventDefault();
@@ -546,15 +568,42 @@
     }
   };
 
+  const ICON_OPTIONS = {
+    PDF:   ['📄','📕','📋','📑','📃','🗒️'],
+    DOCX:  ['📝','📄','📃','📋','🗒️','✏️'],
+    PPTX:  ['📊','📈','🗂️','📉','🖥️','📐'],
+    VIDEO: ['🎬','📹','🎥','📽️','▶️','🎞️'],
+    '':    ['📁','📂','📄','📝','🔗','📌']
+  };
+
+  const ICON_DEFAULT = { PDF: '📄', DOCX: '📝', PPTX: '📊', VIDEO: '🎬', '': '📁' };
+
   function updateFieldsForType(type) {
     const config = type === 'VIDEO' ? URL_HINTS.video : URL_HINTS.drive;
     document.getElementById('urlFieldLabel').textContent = config.label;
     document.getElementById('repoDriveUrl').placeholder = config.placeholder;
     document.getElementById('urlFieldHint').innerHTML = config.hint;
-    if (type === 'VIDEO') {
-      const iconField = document.getElementById('repoIcon');
-      if (iconField && !iconField.value.trim()) iconField.value = '🎬';
-    }
+
+    // Auto-asignar ícono por defecto según el tipo seleccionado
+    const iconField = document.getElementById('repoIcon');
+    if (ICON_DEFAULT[type]) iconField.value = ICON_DEFAULT[type];
+
+    renderIconPicker(type, iconField.value);
+  }
+
+  function renderIconPicker(type, selected) {
+    const picker = document.getElementById('iconPicker');
+    const icons = ICON_OPTIONS[type] || ICON_OPTIONS[''];
+    picker.innerHTML = icons.map(icon => `
+      <button type="button" class="icon-btn ${icon === selected ? 'active' : ''}"
+        onclick="selectIcon('${icon}')" title="${icon}">${icon}</button>
+    `).join('');
+  }
+
+  function selectIcon(icon) {
+    document.getElementById('repoIcon').value = icon;
+    const type = document.getElementById('repoFileType').value;
+    renderIconPicker(type, icon);
   }
 
   function toEmbedUrl(url, fileType) {
@@ -720,6 +769,7 @@
     document.getElementById('repoFileType').value = item.fileType;
     updateFieldsForType(item.fileType);
     document.getElementById('repoIcon').value = item.icon;
+    renderIconPicker(item.fileType, item.icon);
     document.getElementById('repoDate').value = item.date;
     document.getElementById('repoDriveUrl').value = item.externalUrl || item.embedUrl || '';
     document.getElementById('submitBtn').textContent = '💾 Guardar Cambios';
@@ -784,6 +834,7 @@
   function resetForm() {
     document.getElementById('repoForm').reset();
     document.getElementById('repoId').value = '';
+    document.getElementById('repoIcon').value = '📁';
     document.getElementById('submitBtn').textContent = '➕ Agregar Documento';
     document.querySelector('.form-section h2').textContent = '✎ Nuevo Documento';
     updateFieldsForType('');
