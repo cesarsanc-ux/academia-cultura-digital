@@ -1,5 +1,5 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyDhtSqYJggi0D_MPMTuBRdG0pqEdeFtseQ",
+  apiKey: os.getenv("API_KEY"),
   authDomain: "academia-cultura-digital.firebaseapp.com",
   projectId: "academia-cultura-digital",
   storageBucket: "academia-cultura-digital.firebasestorage.app",
