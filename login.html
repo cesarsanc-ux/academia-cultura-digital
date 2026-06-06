@@ -180,17 +180,22 @@
   const ALLOWED_EMAILS = [
     'cesar.sanchezcoyotzi@cecytlax.edu.mx'
     // Agrega aquí más correos autorizados si es necesario
-  ];
+  ].map(email => email.toLowerCase().trim());
+
+  function isEmailAllowed(user) {
+    return user?.email && ALLOWED_EMAILS.includes(user.email.toLowerCase().trim());
+  }
 
   auth.onAuthStateChanged(user => {
     if (user) {
-      if (ALLOWED_EMAILS.includes(user.email)) {
+      if (isEmailAllowed(user)) {
         window.location.href = 'admin-noticias.html';
       } else {
         auth.signOut();
         showAlert('Acceso denegado. Tu cuenta de Google no tiene permisos para esta área.', 'error');
-        document.getElementById('googleBtn').disabled = false;
-        document.getElementById('googleBtn').innerHTML = GOOGLE_BTN_HTML;
+        const btn = document.getElementById('googleBtn');
+        btn.disabled = false;
+        btn.innerHTML = GOOGLE_BTN_HTML;
       }
     }
   });

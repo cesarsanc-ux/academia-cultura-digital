@@ -527,10 +527,14 @@
   // ── GUARD DE AUTENTICACIÓN ──
   const ALLOWED_EMAILS = [
     'cesar.sanchezcoyotzi@cecytlax.edu.mx'
-  ];
+  ].map(email => email.toLowerCase().trim());
+
+  function isEmailAllowed(user) {
+    return user?.email && ALLOWED_EMAILS.includes(user.email.toLowerCase().trim());
+  }
 
   auth.onAuthStateChanged(user => {
-    if (!user || !ALLOWED_EMAILS.includes(user.email)) {
+    if (!isEmailAllowed(user)) {
       auth.signOut();
       window.location.href = 'login.html';
       return;
