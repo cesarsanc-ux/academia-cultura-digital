@@ -1,0 +1,15 @@
+{
+  "name": "cultura-digital-functions",
+  "description": "Firebase Cloud Functions para el portal de Cultura Digital CECyTE",
+  "engines": { "node": "18" },
+  "main": "index.js",
+  "scripts": {
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.5.0"
+  },
+  "private": true
+}

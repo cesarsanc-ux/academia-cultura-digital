@@ -420,6 +420,81 @@
       .admin-grid { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
     }
+
+    /* ── ASISTENTE IA ── */
+    .form-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--dorado);
+      padding-bottom: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .form-section-header h2 {
+      border: none;
+      margin: 0;
+      padding: 0;
+    }
+    .btn-ai {
+      background: linear-gradient(135deg, var(--guinda), var(--guinda-light));
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 0.4rem 0.85rem;
+      letter-spacing: 0.04em;
+    }
+    .btn-ai:hover { opacity: 0.88; }
+    .ai-panel {
+      display: none;
+      background: linear-gradient(135deg, rgba(31,79,37,0.04), rgba(106,139,50,0.07));
+      border: 1px solid rgba(31,79,37,0.2);
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .ai-panel.open { display: block; }
+    .ai-panel-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--guinda);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.4rem;
+    }
+    .ai-panel-hint {
+      font-size: 0.82rem;
+      color: var(--texto-suave);
+      line-height: 1.55;
+      margin-bottom: 0.85rem;
+    }
+    .ai-panel textarea {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--gris-medio);
+      border-radius: 8px;
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--texto);
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.2s;
+    }
+    .ai-panel textarea:focus {
+      outline: none;
+      border-color: var(--guinda);
+    }
+    .ai-panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      flex-wrap: wrap;
+    }
+    @keyframes aiFlash {
+      0%   { background: rgba(31,79,37,0.14); }
+      100% { background: transparent; }
+    }
+    .ai-flash { animation: aiFlash 0.8s ease; border-radius: 6px; }
   </style>
 </head>
 <body data-protected="true">
@@ -507,7 +582,25 @@
   <div class="admin-grid">
     <!-- FORM -->
     <section class="form-section">
-      <h2>✎ Nueva Noticia</h2>
+      <div class="form-section-header">
+        <h2 id="formTitle">✎ Nueva Noticia</h2>
+        <button type="button" class="btn btn-ai btn-sm" id="aiToggleBtn" onclick="toggleAiPanel()">✨ IA</button>
+      </div>
+
+      <!-- Panel de asistente IA -->
+      <div class="ai-panel" id="aiPanel">
+        <div class="ai-panel-label">✨ Asistente de Redacción</div>
+        <p class="ai-panel-hint">
+          Describe brevemente el aviso y la IA completará el formulario automáticamente.
+          Podrás revisar y ajustar antes de guardar.
+        </p>
+        <textarea id="aiBorrador" placeholder="Ej: Reunión de academia estatal el 15 de agosto para revisar los formatos del tercer parcial. Se requiere confirmación de asistencia antes del viernes..."></textarea>
+        <div class="ai-panel-actions">
+          <button type="button" class="btn btn-ai btn-sm" id="aiGenerarBtn" onclick="generarConIA()">✨ Generar noticia</button>
+          <span id="aiStatus" style="font-size:0.82rem;color:var(--texto-suave);"></span>
+        </div>
+      </div>
+
       <form id="newsForm">
         <input type="hidden" id="newsId" />
 
@@ -636,6 +729,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
 <script src="assets/firebase-config.js"></script>
 <script src="assets/default-news.js"></script>
 <script src="auth.js"></script>
@@ -918,7 +1012,7 @@
     renderNewsIconPicker(item.icon);
     document.getElementById('newsDate').value = item.date;
     document.getElementById('submitBtn').textContent = '💾 Guardar Cambios';
-    document.querySelector('.form-section h2').textContent = '✎ Editar Noticia';
+    document.getElementById('formTitle').textContent = '✎ Editar Noticia';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -984,7 +1078,7 @@
     document.getElementById('newsId').value = '';
     document.getElementById('newsIcon').value = '📋';
     document.getElementById('submitBtn').textContent = '➕ Agregar Noticia';
-    document.querySelector('.form-section h2').textContent = '✎ Nueva Noticia';
+    document.getElementById('formTitle').textContent = '✎ Nueva Noticia';
     renderNewsIconPicker('📋');
     setTodayDate();
   }
@@ -998,8 +1092,84 @@
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeDeleteModal(); closeDetailModal(); }
+    if (e.key === 'Escape') {
+      closeDeleteModal();
+      closeDetailModal();
+      if (document.getElementById('aiPanel').classList.contains('open')) toggleAiPanel();
+    }
   });
+
+  // ── ASISTENTE IA ──
+  const generarNoticiaFn = firebase.functions().httpsCallable('generarNoticia');
+
+  function toggleAiPanel() {
+    const panel = document.getElementById('aiPanel');
+    const isOpen = panel.classList.toggle('open');
+    const btn = document.getElementById('aiToggleBtn');
+    btn.textContent = isOpen ? '✕ Cerrar' : '✨ IA';
+    if (isOpen) {
+      document.getElementById('aiBorrador').focus();
+      const s = document.getElementById('aiStatus');
+      s.textContent = '';
+      s.style.color = '';
+    }
+  }
+
+  async function generarConIA() {
+    const borrador = document.getElementById('aiBorrador').value.trim();
+    const status = document.getElementById('aiStatus');
+
+    if (borrador.length < 10) {
+      status.textContent = '⚠ Describe el aviso con más detalle.';
+      status.style.color = 'var(--error)';
+      return;
+    }
+
+    const btn = document.getElementById('aiGenerarBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generando…';
+    status.textContent = 'Consultando al asistente…';
+    status.style.color = 'var(--texto-suave)';
+
+    try {
+      const result = await generarNoticiaFn({ borrador });
+      const d = result.data;
+
+      // Rellenar el formulario
+      document.getElementById('newsTag').value = d.tag;
+      document.getElementById('newsTitle').value = d.title;
+      document.getElementById('newsDesc').value = d.desc;
+      document.getElementById('newsDetail').value = d.detail;
+      document.getElementById('newsIcon').value = d.icon;
+      renderNewsIconPicker(d.icon);
+
+      // Animación visual en cada campo
+      ['newsTitle', 'newsDesc', 'newsDetail', 'newsTag', 'newsIcon'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.add('ai-flash');
+        el.addEventListener('animationend', () => el.classList.remove('ai-flash'), { once: true });
+      });
+
+      status.textContent = '✓ ¡Listo! Revisa el formulario y guarda cuando estés conforme.';
+      status.style.color = 'var(--exito)';
+
+      setTimeout(() => {
+        toggleAiPanel();
+        document.getElementById('aiBorrador').value = '';
+      }, 2500);
+
+    } catch (err) {
+      const raw = err.message || '';
+      const msg = raw && !raw.includes('INTERNAL')
+        ? raw
+        : 'Error al generar. Verifica la configuración e intenta de nuevo.';
+      status.textContent = '⚠ ' + msg;
+      status.style.color = 'var(--error)';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✨ Generar noticia';
+    }
+  }
 </script>
 <script src="assets/theme.js"></script>
 
