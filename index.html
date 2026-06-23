@@ -1740,6 +1740,15 @@
   // ── ESTADO GLOBAL (se llena al cargar desde Firestore) ──
   let allNewsItems = [];
   let allRepoItems = [];
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function isSafeUrl(url) {
+    if (!url) return '';
+    return /^javascript:/i.test(String(url).trim()) ? '' : String(url);
+  }
   function toggleNav() {
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
@@ -1799,12 +1808,12 @@
     const track = document.getElementById('carouselTrack');
     track.innerHTML = news.map((item, idx) => `
       <div class="news-card" onclick="viewNews(${idx})">
-        <div class="news-card-img">${item.icon}</div>
+        <div class="news-card-img">${escapeHtml(item.icon)}</div>
         <div class="news-card-body">
-          <span class="news-tag">${item.tag}</span>
-          <div class="news-card-title">${item.title}</div>
+          <span class="news-tag">${escapeHtml(item.tag)}</span>
+          <div class="news-card-title">${escapeHtml(item.title)}</div>
           <div class="news-card-date">📅 ${new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-          <p style="margin-top: 1rem; color: var(--texto-suave); font-size: 0.9rem; line-height: 1.5;">${item.desc}</p>
+          <p style="margin-top: 1rem; color: var(--texto-suave); font-size: 0.9rem; line-height: 1.5;">${escapeHtml(item.desc)}</p>
         </div>
       </div>
     `).join('');
@@ -1816,17 +1825,19 @@
     return `
       <div class="news-modal-attachments">
         ${attachments.map(file => {
+          const safeSrc = isSafeUrl(file.data);
+          const safeName = escapeHtml(file.name);
           if (file.type && file.type.startsWith('image/')) {
             return `
               <div class="news-modal-attachment" style="flex-direction:column; align-items:flex-start;">
-                <img src="${file.data}" alt="${file.name}" style="max-width:100%; border-radius:12px; display:block; margin-bottom:0.5rem;" />
-                <span>🖼️ ${file.name}</span>
+                <img src="${safeSrc}" alt="${safeName}" style="max-width:100%; border-radius:12px; display:block; margin-bottom:0.5rem;" />
+                <span>🖼️ ${safeName}</span>
               </div>
             `;
           }
           return `
-            <a class="news-modal-attachment" href="${file.data}" target="_blank" download="${file.name}">
-              📎 ${file.name}
+            <a class="news-modal-attachment" href="${safeSrc}" target="_blank" download="${safeName}">
+              📎 ${safeName}
             </a>
           `;
         }).join('')}
@@ -1839,9 +1850,9 @@
     const container = document.getElementById('newsListContainer');
     container.innerHTML = allNewsItems.map((item, idx) => `
       <div class="news-list-card" onclick="viewNews(${idx})">
-        <h4>${item.icon} ${item.title}</h4>
-        <p>${item.desc}</p>
-        <small>📅 ${new Date(item.date).toLocaleDateString('es-MX')} · ${item.tag}</small>
+        <h4>${escapeHtml(item.icon)} ${escapeHtml(item.title)}</h4>
+        <p>${escapeHtml(item.desc)}</p>
+        <small>📅 ${new Date(item.date).toLocaleDateString('es-MX')} · ${escapeHtml(item.tag)}</small>
       </div>
     `).join('');
     document.getElementById('allNewsSection').style.display = 'block';
@@ -1861,10 +1872,10 @@
 
     document.getElementById('newsDetailTitle').textContent = `${item.icon} ${item.title}`;
     document.getElementById('newsDetailBody').innerHTML = `
-      <p><strong>Categoría:</strong> ${item.tag}</p>
+      <p><strong>Categoría:</strong> ${escapeHtml(item.tag)}</p>
       <p><strong>Fecha:</strong> ${date}</p>
-      <p><strong>Resumen:</strong><br>${item.desc}</p>
-      <p><strong>Contenido completo:</strong><br>${detail.replace(/\n/g, '<br>')}</p>
+      <p><strong>Resumen:</strong><br>${escapeHtml(item.desc)}</p>
+      <p><strong>Contenido completo:</strong><br>${escapeHtml(detail).replace(/\n/g, '<br>')}</p>
       ${renderNewsAttachments(item.attachments)}
     `;
     document.getElementById('newsDetailModal').classList.add('show');
@@ -1920,19 +1931,29 @@
     }
     container.innerHTML = items.map(item => {
       const bc = badgeClass[item.fileType] || 'badge-pdf';
-      const safeTitle = (item.name || '').replace(/'/g, '&#39;');
-      const clickAttr = item.embedUrl
-        ? `onclick="openLinkModal('${item.embedUrl}','${safeTitle}','${item.externalUrl || item.embedUrl}')"`
-        : item.externalUrl ? `onclick="window.open('${item.externalUrl}','_blank')"` : '';
-      return `<div class="repo-item" data-cat="${item.cat}" ${clickAttr}>
-        <div class="repo-file-icon">${item.icon || '📄'}</div>
+      return `<div class="repo-item"
+          data-cat="${escapeHtml(item.cat)}"
+          data-embed="${escapeHtml(item.embedUrl || '')}"
+          data-ext="${escapeHtml(item.externalUrl || item.embedUrl || '')}"
+          data-title="${escapeHtml(item.name || '')}">
+        <div class="repo-file-icon">${escapeHtml(item.icon || '📄')}</div>
         <div class="repo-item-info">
-          <div class="repo-item-name">${item.name}</div>
-          <div class="repo-item-meta">${item.meta}</div>
+          <div class="repo-item-name">${escapeHtml(item.name)}</div>
+          <div class="repo-item-meta">${escapeHtml(item.meta)}</div>
         </div>
-        <span class="repo-item-badge ${bc}">${item.fileType}</span>
+        <span class="repo-item-badge ${bc}">${escapeHtml(item.fileType)}</span>
       </div>`;
     }).join('');
+    container.querySelectorAll('.repo-item').forEach(el => {
+      const embedUrl = isSafeUrl(el.dataset.embed);
+      const ext = isSafeUrl(el.dataset.ext);
+      const title = el.dataset.title;
+      if (embedUrl) {
+        el.addEventListener('click', () => openLinkModal(embedUrl, title, ext));
+      } else if (ext) {
+        el.addEventListener('click', () => window.open(ext, '_blank'));
+      }
+    });
   }
 
   // ── REPO FILTER ──

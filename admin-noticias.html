@@ -640,6 +640,15 @@
 <script src="assets/default-news.js"></script>
 <script src="auth.js"></script>
 <script>
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function isSafeUrl(url) {
+    if (!url) return '';
+    return /^javascript:/i.test(String(url).trim()) ? '' : String(url);
+  }
+
   // ── GUARD DE AUTENTICACIÓN ──
   const ALLOWED_EMAILS = [
     'cesar.sanchezcoyotzi@cecytlax.edu.mx'
@@ -794,21 +803,21 @@
 
   function renderAttachmentBadges(attachments = []) {
     if (!attachments || attachments.length === 0) return '';
-    return `<div class="news-attachments">${attachments.map(f => `<span class="attachment-badge">📎 ${f.name}</span>`).join('')}</div>`;
+    return `<div class="news-attachments">${attachments.map(f => `<span class="attachment-badge">📎 ${escapeHtml(f.name)}</span>`).join('')}</div>`;
   }
 
   function renderAttachmentsHtml(attachments = []) {
     if (!attachments || attachments.length === 0) return '';
-    const src = f => f.url || f.data || '';
+    const src = f => isSafeUrl(f.url || f.data || '');
     return `
       <div class="news-item-desc">
         <strong>Archivos adjuntos:</strong>
         <div class="news-attachments">
           ${attachments.map(f => (f.type || '').startsWith('image/') ? `
-            <a href="${src(f)}" target="_blank" class="attachment-badge">📷 ${f.name}</a>
-            <img class="attachment-preview" src="${src(f)}" alt="${f.name}" />
+            <a href="${src(f)}" target="_blank" class="attachment-badge">📷 ${escapeHtml(f.name)}</a>
+            <img class="attachment-preview" src="${src(f)}" alt="${escapeHtml(f.name)}" />
           ` : `
-            <a href="${src(f)}" target="_blank" class="attachment-badge">📎 ${f.name}</a>
+            <a href="${src(f)}" target="_blank" class="attachment-badge">📎 ${escapeHtml(f.name)}</a>
           `).join('')}
         </div>
       </div>`;
@@ -838,12 +847,12 @@
         <div class="news-item">
           <div class="news-item-header">
             <div>
-              <div class="news-item-title">${item.icon} ${item.title}${badge}</div>
-              <div class="news-item-tag">${item.tag}</div>
+              <div class="news-item-title">${escapeHtml(item.icon)} ${escapeHtml(item.title)}${badge}</div>
+              <div class="news-item-tag">${escapeHtml(item.tag)}</div>
             </div>
           </div>
           <div class="news-item-meta">📅 ${new Date(item.date).toLocaleDateString('es-MX')}</div>
-          <div class="news-item-desc">${item.desc}</div>
+          <div class="news-item-desc">${escapeHtml(item.desc)}</div>
           ${renderAttachmentBadges(item.attachments)}
           <div class="news-item-actions">
             <button class="btn btn-sm btn-info" onclick="viewNewsById(${realIdx})">👁 Ver</button>
@@ -919,10 +928,10 @@
     const detail = item.detail || item.desc;
     document.getElementById('detailModalTitle').textContent = `${item.icon} ${item.title}`;
     document.getElementById('detailModalBody').innerHTML = `
-      <p><strong>Categoría:</strong> ${item.tag}</p>
+      <p><strong>Categoría:</strong> ${escapeHtml(item.tag)}</p>
       <p><strong>Fecha:</strong> ${date}</p>
-      <div class="news-item-desc"><strong>Descripción breve:</strong><br>${item.desc}</div>
-      <div class="news-item-desc" style="margin-top:1rem;"><strong>Información completa:</strong><br>${detail.replace(/\n/g, '<br>')}</div>
+      <div class="news-item-desc"><strong>Descripción breve:</strong><br>${escapeHtml(item.desc)}</div>
+      <div class="news-item-desc" style="margin-top:1rem;"><strong>Información completa:</strong><br>${escapeHtml(detail).replace(/\n/g, '<br>')}</div>
       ${renderAttachmentsHtml(item.attachments)}`;
     document.getElementById('detailModal').classList.add('show');
   }

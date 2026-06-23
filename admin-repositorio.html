@@ -524,6 +524,15 @@
 <script src="assets/default-repo.js"></script>
 <script src="auth.js"></script>
 <script>
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function isSafeUrl(url) {
+    if (!url) return '';
+    return /^javascript:/i.test(String(url).trim()) ? '' : String(url);
+  }
+
   // ── GUARD DE AUTENTICACIÓN ──
   const ALLOWED_EMAILS = [
     'cesar.sanchezcoyotzi@cecytlax.edu.mx'
@@ -720,12 +729,12 @@
       return `
         <div class="repo-list-item">
           <div class="repo-list-item-header">
-            <div class="repo-list-item-title">${item.icon || '📄'} ${item.name}</div>
+            <div class="repo-list-item-title">${escapeHtml(item.icon || '📄')} ${escapeHtml(item.name)}</div>
           </div>
-          <div class="repo-list-item-meta">📅 ${dateStr} · ${item.meta}</div>
+          <div class="repo-list-item-meta">📅 ${dateStr} · ${escapeHtml(item.meta)}</div>
           <div class="repo-list-item-tags">
-            <span class="badge ${bc}">${item.fileType}</span>
-            <span class="badge badge-cat">${catLabel}</span>
+            <span class="badge ${bc}">${escapeHtml(item.fileType)}</span>
+            <span class="badge badge-cat">${escapeHtml(catLabel)}</span>
             ${defaultBadge}
           </div>
           <div class="repo-list-item-actions">
@@ -802,14 +811,15 @@
     const item = allRepo[idx];
     const catLabel = CAT_LABELS[item.cat] || item.cat;
     const dateStr = item.date ? new Date(item.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Sin fecha';
+    const safeUrl = isSafeUrl(item.externalUrl || item.embedUrl) || '#';
     document.getElementById('detailModalTitle').textContent = `${item.icon || '📄'} ${item.name}`;
     document.getElementById('detailModalBody').innerHTML = `
-      <p><strong>Categoría:</strong> ${catLabel}</p>
-      <p><strong>Tipo:</strong> ${item.fileType}</p>
-      <p><strong>Meta:</strong> ${item.meta}</p>
+      <p><strong>Categoría:</strong> ${escapeHtml(catLabel)}</p>
+      <p><strong>Tipo:</strong> ${escapeHtml(item.fileType)}</p>
+      <p><strong>Meta:</strong> ${escapeHtml(item.meta)}</p>
       <p><strong>Fecha:</strong> ${dateStr}</p>
       <p style="margin-top:1rem;"><strong>URL del recurso:</strong><br>
-        <a href="${item.externalUrl || item.embedUrl}" target="_blank" style="color:var(--info);word-break:break-all;">${item.externalUrl || item.embedUrl}</a>
+        <a href="${escapeHtml(safeUrl)}" target="_blank" style="color:var(--info);word-break:break-all;">${escapeHtml(safeUrl)}</a>
       </p>`;
     document.getElementById('detailModal').classList.add('show');
   }
