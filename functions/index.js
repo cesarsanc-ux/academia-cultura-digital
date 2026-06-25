@@ -3,7 +3,79 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+// ── HELPER: llamada a Claude ──────────────────────────────────────────────────
+async function callClaude(apiKey, { system, messages, max_tokens = 512 }) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens, system, messages })
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    functions.logger.error('Anthropic error', { status: response.status, body: err });
+    throw new functions.https.HttpsError('internal', 'Error al contactar el servicio de IA. Intenta de nuevo.');
+  }
+  const result = await response.json();
+  return (result.content[0].text || '').trim();
+}
+
 const ALLOWED_EMAILS = ['cesar.sanchezcoyotzi@cecytlax.edu.mx'];
+
+// ── ASISTENTE PARA DOCENTES (público) ────────────────────────────────────────
+exports.consultarAsistente = functions.https.onCall(async (data, context) => {
+  // Validar y sanitizar mensajes de la conversación
+  const rawMensajes = Array.isArray(data.mensajes) ? data.mensajes : [];
+  if (rawMensajes.length === 0) {
+    throw new functions.https.HttpsError('invalid-argument', 'Envía al menos un mensaje.');
+  }
+
+  const mensajes = rawMensajes
+    .slice(-8)
+    .filter(m => m && typeof m.content === 'string' && m.content.trim())
+    .map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content).slice(0, 1000)
+    }));
+
+  if (!mensajes.length || mensajes[mensajes.length - 1].role !== 'user') {
+    throw new functions.https.HttpsError('invalid-argument', 'El último mensaje debe ser del usuario.');
+  }
+
+  // Contexto enviado por el cliente (noticias y repositorio ya cargados)
+  const noticias   = Array.isArray(data.noticias)    ? data.noticias.slice(0, 25)    : [];
+  const repositorio = Array.isArray(data.repositorio) ? data.repositorio.slice(0, 25) : [];
+
+  const newsCtx = noticias.length
+    ? noticias.map(n => `• [${n.tag || 'Aviso'}] "${n.title}" (${n.date || ''}): ${n.desc || ''}`).join('\n')
+    : 'Sin noticias disponibles actualmente.';
+
+  const repoCtx = repositorio.length
+    ? repositorio.map(r => `• [${r.fileType || 'DOC'}][${r.cat || ''}] "${r.name}": ${r.meta || ''}`).join('\n')
+    : 'Sin documentos disponibles actualmente.';
+
+  const cfg = functions.config();
+  const apiKey = cfg.anthropic && cfg.anthropic.key;
+  if (!apiKey) {
+    throw new functions.https.HttpsError('internal', 'Servicio de IA no configurado.');
+  }
+
+  const system = `Eres el asistente virtual del área de Cultura Digital del CECyTE (Colegio de Estudios Científicos y Tecnológicos). Ayudas a los docentes a encontrar información, recursos y avisos del portal web del área.
+
+Responde en español con tono amigable y conciso (máximo 3-4 oraciones). Si la información no está en los datos disponibles, dilo honestamente y sugiere contactar al coordinador: culturadigital@CECyTE.edu.mx. No inventes datos.
+
+NOTICIAS Y AVISOS RECIENTES:
+${newsCtx}
+
+DOCUMENTOS EN EL REPOSITORIO:
+${repoCtx}`;
+
+  const respuesta = await callClaude(apiKey, { system, messages: mensajes });
+  return { respuesta };
+});
 
 const VALID_TAGS = ['Academia', 'Calendario', 'Formatos', 'Capacitación', 'Plataformas', 'Anuncio'];
 
@@ -42,20 +114,12 @@ exports.generarNoticia = functions.https.onCall(async (data, context) => {
   }
 
   // Llamar a Claude
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: `Redacta una noticia formal para el portal del área de Cultura Digital, \
+  const rawText = await callClaude(apiKey, {
+    system: SYSTEM_PROMPT,
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: `Redacta una noticia formal para el portal del área de Cultura Digital, \
 basándote en este borrador del coordinador:
 
 "${borrador}"
@@ -68,18 +132,8 @@ Devuelve ÚNICAMENTE un objeto JSON válido (sin bloques de código markdown, si
   "tag": "una opción exacta de: Academia, Calendario, Formatos, Capacitación, Plataformas, Anuncio",
   "icon": "un emoji que represente visualmente la noticia"
 }`
-      }]
-    })
+    }]
   });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    functions.logger.error('Anthropic API error', { status: response.status, body: errText });
-    throw new functions.https.HttpsError('internal', 'Error al contactar el servicio de IA. Intenta de nuevo.');
-  }
-
-  const result = await response.json();
-  const rawText = (result.content[0].text || '').trim();
 
   // Parsear JSON de la respuesta
   let parsed;
